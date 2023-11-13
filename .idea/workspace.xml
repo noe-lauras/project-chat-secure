@@ -4,8 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2c6ef701-35b2-4578-a5b7-99d90fab3bee" name="Changes" comment="first commit">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="2c6ef701-35b2-4578-a5b7-99d90fab3bee" name="Changes" comment="Création classe AES">
+      <change beforePath="$PROJECT_DIR$/src/AES.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/AES.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,7 +35,9 @@
   "keyToString": {
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "C:/Users/dydee/IdeaProjects/Projet Réseau 2",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -53,6 +55,7 @@
       <updated>1699869923094</updated>
       <workItem from="1699869924784" duration="133000" />
       <workItem from="1699870125126" duration="444000" />
+      <workItem from="1699871466560" duration="2143000" />
     </task>
     <task id="LOCAL-00001" summary="first commit">
       <created>1699870033476</created>
@@ -61,7 +64,21 @@
       <option name="project" value="LOCAL" />
       <updated>1699870033476</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="change name server">
+      <created>1699871571023</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1699871571023</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Création classe AES">
+      <created>1699873348403</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1699873348403</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -80,6 +97,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="first commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="first commit" />
+    <MESSAGE value="change name server" />
+    <MESSAGE value="Création classe AES" />
+    <option name="LAST_COMMIT_MESSAGE" value="Création classe AES" />
   </component>
 </project>
