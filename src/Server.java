@@ -1,15 +1,16 @@
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.ServerSocket;
 import java.net.Socket;
 
-public class Client {
-    private Socket socket;
+public class Server {
+    private ServerSocket serverSocket;
     private String ip;
     private int port;
     private boolean isRunning;
 
-    public Client(String ip, int port) {
+    public Server(String ip, int port) {
         this.ip = ip;
         this.port = port;
         this.isRunning = false;
@@ -17,28 +18,49 @@ public class Client {
 
     public void start() {
         try {
-            this.socket = new Socket(this.ip, this.port);
+            this.serverSocket = new ServerSocket(this.port);
             this.isRunning = true;
-            System.out.println("Client started on port " + this.port);
+            System.out.println("Server started on port " + this.port);
 
-            // Example: Read a message from the server
-            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            String receivedMessage = reader.readLine();
-            System.out.println("Received from server: " + receivedMessage);
-
-            // Close the connection
-            socket.close();
+            while (this.isRunning) {
+                Socket clientSocket = serverSocket.accept();
+                handleClientConnection(clientSocket);
+            }
 
         } catch (Exception e) {
-            System.out.println("Error while starting client: " + e.getMessage());
+            System.out.println("Error while starting server: " + e.getMessage());
         }
     }
+
+    private void handleClientConnection(Socket clientSocket) {
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            PrintWriter writer = new PrintWriter(clientSocket.getOutputStream(), true);
+
+            // Example: Read a message from the client
+            String receivedMessage = reader.readLine();
+            System.out.println("Received from client: " + receivedMessage);
+
+            // si le client envoie "bye", on ferme la connexion
+            if (receivedMessage.equals("bye")) {
+                this.isRunning = false;
+            
+            }
+            // Close the connection
+            clientSocket.close();
+
+        } catch (Exception e) {
+            System.out.println("Error handling client connection: " + e.getMessage());
+        }
+    }
+
 
     public boolean isRunning() {
         return this.isRunning;
     }
 
     public void sendMessage(String message) {
+
         try {
             // on crée un socket pour se connecter au serveur
             Socket clientSocket = new Socket(this.ip, this.port);
@@ -50,8 +72,7 @@ public class Client {
             writer.println(message);
 
             // on crée un reader pour lire la réponse du serveur
-            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream
-                    ()));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
             // on lit la réponse du serveur
             String receivedMessage = reader.readLine();
