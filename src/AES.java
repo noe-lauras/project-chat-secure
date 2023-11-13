@@ -35,10 +35,4 @@ class AES {
         }
         return(original);
     }
-
-    public static void main(String[] args) throws NoSuchPaddingException, NoSuchAlgorithmException {
-        AES a=new AES();
-        System.out.println(Arrays.toString(a.encrypt("Piou piou")));
-        System.out.println(a.decrypt(a.encrypt("Piou Piou")));
-    }
 }
