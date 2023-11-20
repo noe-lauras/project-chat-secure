@@ -1,7 +1,7 @@
 
-import javax.crypto.spec.SecretKeySpec;
 import java.net.*;
 import java.io.*;
+import java.security.Key;
 import java.util.*;
 
 
@@ -10,15 +10,13 @@ public class Client  {
 	
 	// notification
 	private String notif = " *** ";
+
 	private ObjectInputStream sInput;		// pour lire du socket
 	private ObjectOutputStream sOutput;		// pour ecrire sur le socket
 	private Socket socket;					// socket object
-	
 	private String server, username;	// server et username
-	private int port;					// port
-
-	private AES aes = null; 				// clé de cryptage AES
-
+	private int port; // port
+	private Key key;
 	public String getUsername() {
 		return username;
 	}
@@ -39,7 +37,9 @@ public class Client  {
 		this.port = port;
 		this.username = username;
 	}
-	
+	Client(Key key){
+		this.key=key;
+	}
 	/*
 	 * Pour demarrer le chat
 	 */
@@ -65,7 +65,6 @@ public class Client  {
 		{
 			sInput  = new ObjectInputStream(socket.getInputStream());
 			sOutput = new ObjectOutputStream(socket.getOutputStream());
-
 		}
 		catch (IOException eIO) {
 			display("Exception creating new Input/output Streams: " + eIO);
@@ -84,25 +83,17 @@ public class Client  {
 			disconnect();
 			return false;
 		}
-		receiveAESKey();
 		// tout est ok, on retourne true, pour informer le main que la connexion est ok
 		return true;
 	}
-	private void receiveAESKey() {
-		try {
-			this.aes = new AES();
-			byte[] encodedKey = (byte[]) sInput.readObject();
-			this.aes.key = new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES");
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
-	}
 
 	/*
-	 * Pour afficher un message
+	 * Pour envoyer un message au serveur
 	 */
 	private void display(String msg) {
+
 		System.out.println(msg);
+		
 	}
 	
 	/*
@@ -110,7 +101,6 @@ public class Client  {
 	 */
 	void sendMessage(Message msg) {
 		try {
-			// on encrypte le message
 			sOutput.writeObject(msg);
 		}
 		catch(IOException e) {
@@ -145,7 +135,7 @@ public class Client  {
 	public static void main(String[] args) {
 		// valeurs par défaut si pas d'arguments
 		int portNumber = 1500;
-		String serverAddress = "localhost";
+		String serverAddress = "127.0.0.1";
 		String userName = "Anonymous";
 		Scanner scan = new Scanner(System.in);
 		

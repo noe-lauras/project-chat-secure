@@ -51,7 +51,6 @@ public class Server {
 					break;
 				// creation d'un thread pour le client
 				ClientThread t = new ClientThread(socket);
-				// on transmet au client la clé de cryptage AES
 				// ajout du client à la liste des clients
 				al.add(t);
 				// on démarre le thread
@@ -220,6 +219,7 @@ public class Server {
 				sInput  = new ObjectInputStream(socket.getInputStream());
 				// on lit le nom d'utilisateur
 				username = (String) sInput.readObject();
+
 				broadcast(notif + username + " has joined the chat room." + notif);
 
 				// si aes n'est pas instancié, on le fait
@@ -230,7 +230,7 @@ public class Server {
 						e.printStackTrace();
 					}
 				}
-
+				sendAESKey();
 			}
 			catch (IOException e) {
 				display("Exception creating new Input/output Streams: " + e);
@@ -239,19 +239,15 @@ public class Server {
 			catch (ClassNotFoundException e) {
 			}
             date = new Date().toString() + "\n";
-
-			// Envoie de la clé AES au client
-			sendAESKey();
 		}
-
-		private void sendAESKey() {
-			try {
-				sOutput.writeObject(aes.key.getEncoded()); // Envoie la clé AES au client
-			} catch(IOException e) {
-				display("Error sending AES key to " + username);
-				e.printStackTrace();
-			}
-		}
+		 private void sendAESKey() {
+        try {
+            sOutput.writeObject(aes.key.getEncoded()); // Envoie la clé AES au client
+        } catch(IOException e) {
+            display("Error sending AES key to " + username);
+            e.printStackTrace();
+        }
+    }
 
 		
 		public String getUsername() {
@@ -287,22 +283,22 @@ public class Server {
 				case Message.MESSAGE:
 					boolean confirmation =  broadcast(username + ": " + message);
 					if(confirmation==false){
-						String msg = notif + "L'utilisateur n'existe pas, ou est deconnecté" + notif;
+						String msg = notif + "Sorry. No such user exists." + notif;
 						writeMsg(msg);
 					}
 					break;
                 // bye pour se déconnecter
 				case Message.bye:
-					display(username + " déconnecté avec un bye.");
+					display(username + " disconnected with a LOGOUT message.");
 					keepGoing = false;
 					break;
                 // USERS pour la liste des utilisateurs connectés
 				case Message.USERS:
-					writeMsg("List des utilisateurs connectés à l'instant : " + sdf.format(new Date()) + "\n");
+					writeMsg("List of the users connected at " + sdf.format(new Date()) + "\n");
 					// on itère sur la liste des clients connectés, pour envoyer la liste à l'utilisateur
 					for(int i = 0; i < al.size(); ++i) {
 						ClientThread ct = al.get(i);
-						writeMsg((i+1) + ") " + ct.username + " depuis " + ct.date);
+						writeMsg((i+1) + ") " + ct.username + " since " + ct.date);
 					}
 					break;
 				}
@@ -340,7 +336,7 @@ public class Server {
 			}
 			// si ça ne marche pas on informe l'utilisateur que le message n'a pas été envoyé
 			catch(IOException e) {
-				display(notif + "Erreur d'envoi de message à : " + username + notif);
+				display(notif + "Error sending message to " + username + notif);
 				display(e.toString());
 			}
 			return true;
