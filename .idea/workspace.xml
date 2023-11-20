@@ -4,9 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2c6ef701-35b2-4578-a5b7-99d90fab3bee" name="Changes" comment="Création classe AES">
+    <list default="true" id="2c6ef701-35b2-4578-a5b7-99d90fab3bee" name="Changes" comment="envoi de la clé AES au client">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Client.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/AES.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/AES.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Server.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -85,7 +85,14 @@
       <option name="project" value="LOCAL" />
       <updated>1699873348403</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="envoi de la clé AES au client">
+      <created>1700476130069</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1700476130069</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -106,6 +113,7 @@
     <MESSAGE value="first commit" />
     <MESSAGE value="change name server" />
     <MESSAGE value="Création classe AES" />
-    <option name="LAST_COMMIT_MESSAGE" value="Création classe AES" />
+    <MESSAGE value="envoi de la clé AES au client" />
+    <option name="LAST_COMMIT_MESSAGE" value="envoi de la clé AES au client" />
   </component>
 </project>

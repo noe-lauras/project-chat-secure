@@ -6,7 +6,7 @@ import java.util.*;
 
 public class Server {
 
-	AES aes = null;
+	AES aes = new AES();
 
 	// unique id pour chaque client, plus facile pour la déconnexion
 	private static int uniqueId;
@@ -223,9 +223,9 @@ public class Server {
 				broadcast(notif + username + " has joined the chat room." + notif);
 
 				// si aes n'est pas instancié, on le fait
-				if (aes == null) {
+				if (aes.key == null) {
 					try {
-						aes = new AES();
+						aes.genereKey();
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -282,7 +282,7 @@ public class Server {
                 // MESSAGE pour un message normal
 				case Message.MESSAGE:
 					boolean confirmation =  broadcast(username + ": " + message);
-					if(confirmation==false){
+					if(!confirmation){
 						String msg = notif + "Sorry. No such user exists." + notif;
 						writeMsg(msg);
 					}
@@ -312,15 +312,15 @@ public class Server {
 			try {
 				if(sOutput != null) sOutput.close();
 			}
-			catch(Exception e) {}
+			catch(Exception ignored) {}
 			try {
 				if(sInput != null) sInput.close();
 			}
-			catch(Exception e) {};
+			catch(Exception ignored) {};
 			try {
 				if(socket != null) socket.close();
 			}
-			catch (Exception e) {}
+			catch (Exception ignored) {}
 		}
 
         // écrire un message dans le flux de sortie du client (sOutput, ObjectOutputStream)
