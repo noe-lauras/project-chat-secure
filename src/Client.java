@@ -1,4 +1,5 @@
 
+import javax.crypto.spec.SecretKeySpec;
 import java.net.*;
 import java.io.*;
 import java.util.*;
@@ -9,13 +10,14 @@ public class Client  {
 	
 	// notification
 	private String notif = " *** ";
-
 	private ObjectInputStream sInput;		// pour lire du socket
 	private ObjectOutputStream sOutput;		// pour ecrire sur le socket
 	private Socket socket;					// socket object
 	
 	private String server, username;	// server et username
 	private int port;					// port
+
+	private AES aes = null; 				// clé de cryptage AES
 
 	public String getUsername() {
 		return username;
@@ -63,6 +65,7 @@ public class Client  {
 		{
 			sInput  = new ObjectInputStream(socket.getInputStream());
 			sOutput = new ObjectOutputStream(socket.getOutputStream());
+
 		}
 		catch (IOException eIO) {
 			display("Exception creating new Input/output Streams: " + eIO);
@@ -81,17 +84,25 @@ public class Client  {
 			disconnect();
 			return false;
 		}
+		receiveAESKey();
 		// tout est ok, on retourne true, pour informer le main que la connexion est ok
 		return true;
 	}
+	private void receiveAESKey() {
+		try {
+			this.aes = new AES();
+			byte[] encodedKey = (byte[]) sInput.readObject();
+			this.aes.key = new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES");
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	/*
-	 * Pour envoyer un message au serveur
+	 * Pour afficher un message
 	 */
 	private void display(String msg) {
-
 		System.out.println(msg);
-		
 	}
 	
 	/*
@@ -99,6 +110,7 @@ public class Client  {
 	 */
 	void sendMessage(Message msg) {
 		try {
+			// on encrypte le message
 			sOutput.writeObject(msg);
 		}
 		catch(IOException e) {
