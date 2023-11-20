@@ -34,4 +34,12 @@ class AES {
         }
         return(original);
     }
+
+    String toString1(Key result) {
+        String res = "";
+        for (byte b : result.getEncoded()) {
+            res += Byte.toString(b);
+        }
+        return res;
+    }
 }

@@ -226,6 +226,7 @@ public class Server {
 				if (aes.key == null) {
 					try {
 						aes.genereKey();
+						System.out.println("AES key generated : "+ aes.key.toString());
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -240,9 +241,10 @@ public class Server {
 			}
             date = new Date().toString() + "\n";
 		}
-		 private void sendAESKey() {
+		private void sendAESKey() {
         try {
             sOutput.writeObject(aes.key.getEncoded()); // Envoie la clé AES au client
+			System.out.println("AES key sent to client : " + aes.toString1(aes.key));
         } catch(IOException e) {
             display("Error sending AES key to " + username);
             e.printStackTrace();

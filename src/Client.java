@@ -2,11 +2,14 @@
 import javax.crypto.spec.SecretKeySpec;
 import java.net.*;
 import java.io.*;
+import java.security.Key;
 import java.util.*;
 
 
 // La classe Client qui peut être exécutée en mode console
 public class Client  {
+
+
 
 	// notification
 	private String notif = " *** ";
@@ -88,6 +91,22 @@ public class Client  {
 		return true;
 	}
 
+	private void receiveAESKey() {
+		try {
+			ObjectInputStream sInput = new ObjectInputStream(socket.getInputStream());
+			byte[] keyBytes = (byte[]) sInput.readObject(); // Réception de la clé AES
+			SecretKeySpec keySpec = new SecretKeySpec(keyBytes, "AES");
+
+			this.aes.key = keySpec;
+
+			display("AES key received from server : " + this.aes.key.toString());
+
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+
 
 	/*
 	 * Pour afficher un message
@@ -149,6 +168,8 @@ public class Client  {
 		if(!client.start())
 			return ;
 
+
+
 		// si la connexion est ok, on affiche les instructions
 		System.out.println("\nHello! Bienvenue sur l'espace de chat.");
 		System.out.println("Instructions:");
@@ -189,6 +210,7 @@ public class Client  {
 	class ListenFromServer extends Thread {
 
 		public void run() {
+
 			while(true) {
 				try {
 					// lecture du message du serveur provenant du socket (sInput)
