@@ -5,6 +5,9 @@ import java.util.*;
 
 
 public class Server {
+
+	AES aes = null;
+
 	// unique id pour chaque client, plus facile pour la déconnexion
 	private static int uniqueId;
 	// ArrayList pour la liste des clients connectés
@@ -204,7 +207,7 @@ public class Server {
 		String date;
 
 		// Constructeur
-		ClientThread(Socket socket) {
+		ClientThread(Socket socket) throws IOException {
 			// unique id, on l'incrémente à chaque nouveau client connecté
 			id = ++uniqueId;
 			this.socket = socket;
@@ -217,6 +220,15 @@ public class Server {
 				// on lit le nom d'utilisateur
 				username = (String) sInput.readObject();
 				broadcast(notif + username + " has joined the chat room." + notif);
+
+				// si aes n'est pas instancié, on le fait
+				if (aes == null) {
+					try {
+						aes = new AES();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
 			}
 			catch (IOException e) {
 				display("Exception creating new Input/output Streams: " + e);
