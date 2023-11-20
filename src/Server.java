@@ -219,6 +219,7 @@ public class Server {
 				sInput  = new ObjectInputStream(socket.getInputStream());
 				// on lit le nom d'utilisateur
 				username = (String) sInput.readObject();
+
 				broadcast(notif + username + " has joined the chat room." + notif);
 
 				// si aes n'est pas instancié, on le fait
@@ -229,6 +230,7 @@ public class Server {
 						e.printStackTrace();
 					}
 				}
+				sendAESKey();
 			}
 			catch (IOException e) {
 				display("Exception creating new Input/output Streams: " + e);
@@ -238,6 +240,15 @@ public class Server {
 			}
             date = new Date().toString() + "\n";
 		}
+		 private void sendAESKey() {
+        try {
+            sOutput.writeObject(aes.key.getEncoded()); // Envoie la clé AES au client
+        } catch(IOException e) {
+            display("Error sending AES key to " + username);
+            e.printStackTrace();
+        }
+    }
+
 		
 		public String getUsername() {
 			return username;

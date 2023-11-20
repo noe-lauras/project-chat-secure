@@ -1,6 +1,7 @@
 
 import java.net.*;
 import java.io.*;
+import java.security.Key;
 import java.util.*;
 
 
@@ -13,10 +14,9 @@ public class Client  {
 	private ObjectInputStream sInput;		// pour lire du socket
 	private ObjectOutputStream sOutput;		// pour ecrire sur le socket
 	private Socket socket;					// socket object
-	
 	private String server, username;	// server et username
-	private int port;					// port
-
+	private int port; // port
+	private Key key;
 	public String getUsername() {
 		return username;
 	}
@@ -37,7 +37,9 @@ public class Client  {
 		this.port = port;
 		this.username = username;
 	}
-	
+	Client(Key key){
+		this.key=key;
+	}
 	/*
 	 * Pour demarrer le chat
 	 */
@@ -133,7 +135,7 @@ public class Client  {
 	public static void main(String[] args) {
 		// valeurs par défaut si pas d'arguments
 		int portNumber = 1500;
-		String serverAddress = "localhost";
+		String serverAddress = "127.0.0.1";
 		String userName = "Anonymous";
 		Scanner scan = new Scanner(System.in);
 		
