@@ -1,25 +1,27 @@
-
-import javax.crypto.spec.SecretKeySpec;
-import java.net.*;
-import java.io.*;
-import java.util.*;
+import javax.crypto.NoSuchPaddingException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.Scanner;
 
 
 // La classe Client qui peut être exécutée en mode console
 public class Client  {
 
-	// notification
-	private String notif = " *** ";
 	private ObjectInputStream sInput;		// pour lire du socket
 	private ObjectOutputStream sOutput;		// pour ecrire sur le socket
 	private Socket socket;					// socket object
 
-	private String server, username;	// server et username
-	private int port;					// port
+	private final String server;
+	private String username;	// server et username
+	private final int port;					// port
 
 	private AES aes = null; 				// clé de cryptage AES
-
-	public String getUsername() {
+	private String getUsername() {
 		return username;
 	}
 
@@ -34,10 +36,11 @@ public class Client  {
 	 * username: le nom d'utilisateur
 	 */
 
-	Client(String server, int port, String username) {
+	Client(String server, int port, String username) throws NoSuchPaddingException, NoSuchAlgorithmException {
 		this.server = server;
 		this.port = port;
 		this.username = username;
+		this.aes=new AES();
 	}
 
 	/*
@@ -101,7 +104,10 @@ public class Client  {
 	 */
 	void sendMessage(Message msg) {
 		try {
+			System.out.println(msg.getMessage());
 			// on encrypte le message
+			msg.setMessage((aes.encrypt((String) msg.getMessage())));
+			System.out.println(msg.getMessage());
 			sOutput.writeObject(msg);
 		}
 		catch(IOException e) {
@@ -116,15 +122,15 @@ public class Client  {
 		try {
 			if(sInput != null) sInput.close();
 		}
-		catch(Exception e) {}
+		catch(Exception ignored) {}
 		try {
 			if(sOutput != null) sOutput.close();
 		}
-		catch(Exception e) {}
+		catch(Exception ignored) {}
 		try{
 			if(socket != null) socket.close();
 		}
-		catch(Exception e) {}
+		catch(Exception ignored) {}
 
 	}
 
@@ -133,7 +139,7 @@ public class Client  {
 	 * Si le serverAddress n'est pas spécifié, "localHost" est utilisé
 	 * Si le nom d'utilisateur n'est pas spécifié, "Anonymous" est utilisé
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws NoSuchPaddingException, NoSuchAlgorithmException {
 		// valeurs par défaut si pas d'arguments
 		int portNumber = 1500;
 		String serverAddress = "localhost";
@@ -152,9 +158,9 @@ public class Client  {
 		// si la connexion est ok, on affiche les instructions
 		System.out.println("\nHello! Bienvenue sur l'espace de chat.");
 		System.out.println("Instructions:");
-		System.out.println("1. Tapez simplement le message pour envoyer à tous les utilisateurs connectés");
-		System.out.println("2. Tapez @username votremessage pour envoyer un message privé à un utilisateur spécifique");
-		System.out.println("Attention a à bien respecter l'espace entre le nom d'utilisateur et le message.");
+		System.out.println("1. Tapez simplement un message pour l'envoyer à tous les utilisateurs connectés");
+		System.out.println("2. Tapez @username votre_message pour envoyer un message privé à un utilisateur spécifique");
+		System.out.println("Attention à bien respecter l'espace entre le nom d'utilisateur et le message.");
 		System.out.println("3. Tapez USERS pour voir la liste des utilisateurs connectés");
 		System.out.println("4. Tapez bye pour déconnecter du serveur");
 
@@ -192,16 +198,25 @@ public class Client  {
 			while(true) {
 				try {
 					// lecture du message du serveur provenant du socket (sInput)
-					String msg = (String) sInput.readObject();
+					Object recu = sInput.readObject();
+					//Là je teste si recu est un String (un message normal) ou un Byte[] (la clé)
+					if (recu instanceof String){
+						System.out.println(recu);
+					}
+					else if (recu instanceof Key){
+						System.out.println(Arrays.toString(((Key) recu).getEncoded()));
+						aes.key= (Key) recu;
+					}
 					// on affiche le message
-					System.out.println(msg);
 					System.out.print("> ");
 				}
 				catch(IOException e) {
+					// notification
+					String notif = " *** ";
 					display(notif + "Server has closed the connection: " + e + notif);
 					break;
 				}
-				catch(ClassNotFoundException e2) {
+				catch(ClassNotFoundException ignored) {
 				}
 			}
 		}

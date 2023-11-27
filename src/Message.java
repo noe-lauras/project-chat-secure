@@ -16,7 +16,6 @@ public class Message implements Serializable {
 	static final int USERS = 0, MESSAGE = 1, bye = 2;
 	private int type;
 	private String message;
-	
 	// constructeur
 	Message(int type, String message) {
 		this.type = type;
