@@ -20,7 +20,7 @@ public class Client  {
 	private String username;	// server et username
 	private final int port;					// port
 
-	private AES aes = null; 				// clé de cryptage AES
+	private final AES aes; 				// clé de cryptage AES
 	private String getUsername() {
 		return username;
 	}
@@ -106,7 +106,7 @@ public class Client  {
 		try {
 			System.out.println(msg.getMessage());
 			// on encrypte le message
-			msg.setMessage((aes.encrypt((String) msg.getMessage())));
+			msg.setMessage((Arrays.toString(aes.encrypt(msg.getMessage()))));
 			System.out.println(msg.getMessage());
 			sOutput.writeObject(msg);
 		}

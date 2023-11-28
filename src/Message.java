@@ -14,7 +14,7 @@ import java.io.*;
 public class Message implements Serializable {
 
 	static final int USERS = 0, MESSAGE = 1, bye = 2;
-	private int type;
+	private final int type;
 	private String message;
 	// constructeur
 	Message(int type, String message) {
@@ -28,5 +28,7 @@ public class Message implements Serializable {
 
 	String getMessage() {
 		return message;
+	}
+	void setMessage(String s){ this.message=s;
 	}
 }
