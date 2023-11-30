@@ -15,7 +15,7 @@ public class Message implements Serializable {
 
 	static final int USERS = 0, MESSAGE = 1, bye = 2;
 	private final int type;
-	private String message;
+	private Object message;
 	// constructeur
 	Message(int type, String message) {
 		this.type = type;
@@ -26,9 +26,8 @@ public class Message implements Serializable {
 		return type;
 	}
 
-	String getMessage() {
+	Object getMessage() {
 		return message;
 	}
-	void setMessage(String s){ this.message=s;
-	}
+	void setMessage(Object s){ this.message=s;}
 }

@@ -16,18 +16,9 @@ public class Client  {
 	private ObjectOutputStream sOutput;		// pour ecrire sur le socket
 	private Socket socket;					// socket object
 
-	private final String server;
-	private String username;	// server et username
+	private final String server,username;// server et username
 	private final int port;					// port
-
 	private final AES aes; 				// clé de cryptage AES
-	private String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
-	}
 
 	/*
 	 * Constructeur appelé par la console
@@ -47,7 +38,7 @@ public class Client  {
 	 * Pour demarrer le chat
 	 */
 	public boolean start() {
-		// essai de se connecter au serveur
+		// essaie de se connecter au serveur
 		try {
 			socket = new Socket(server, port);
 		}
@@ -56,12 +47,12 @@ public class Client  {
 			display("Error connectiong to server:" + ec);
 			return false;
 		}
-
+		//Sinon celle-ci est acceptée
 		String msg = "Connection accepted " + socket.getInetAddress() + ":" + socket.getPort();
 		display(msg);
 
 		/*
-		 * Creation des flux d'entree et de sortie
+		 * Creation des flux d'entrée et de sortie
 		 */
 
 		try
@@ -75,9 +66,9 @@ public class Client  {
 			return false;
 		}
 
-		// création du thread pour ecouter le serveur
+		// création du thread pour écouter le serveur
 		new ListenFromServer().start();
-		// envoi du nom d'utilisateur au serveur en tant que String. Tous les autres messages seront des objets ChatMessage et non des String.
+		// Envoi du nom d'utilisateur au serveur en tant que String. Tous les autres messages seront des objets ChatMessage et non des Strings.
 		try
 		{
 			sOutput.writeObject(username);
@@ -102,12 +93,12 @@ public class Client  {
 	/*
 	 * Pour envoyer un message au serveur
 	 */
-	void sendMessage(Message msg) {
+	private void sendMessage(Message msg) {
 		try {
 			System.out.println(msg.getMessage());
 			// on encrypte le message
-			msg.setMessage((Arrays.toString(aes.encrypt(msg.getMessage()))));
-			System.out.println(msg.getMessage());
+			msg.setMessage((aes.encrypt((String) msg.getMessage())));
+			System.out.println(Arrays.toString((byte[])msg.getMessage()));
 			sOutput.writeObject(msg);
 		}
 		catch(IOException e) {
@@ -193,13 +184,12 @@ public class Client  {
 	 * sous classe pour ecouter le serveur, en tant que thread, pour ne pas bloquer le client avec la lecture du socket
 	 */
 	class ListenFromServer extends Thread {
-
 		public void run() {
 			while(true) {
 				try {
 					// lecture du message du serveur provenant du socket (sInput)
 					Object recu = sInput.readObject();
-					//Là je teste si recu est un String (un message normal) ou un Byte[] (la clé)
+					//Là, je teste si recu est un String (un message normal) ou un Byte[] (la clé)
 					if (recu instanceof String){
 						System.out.println(recu);
 					}

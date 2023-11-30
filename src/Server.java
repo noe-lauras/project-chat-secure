@@ -7,7 +7,6 @@ import java.util.*;
 
 
 public class Server {
-
 	AES aes = new AES();
 
 	// unique id pour chaque client, plus facile pour la déconnexion
@@ -72,7 +71,7 @@ public class Server {
 				}
 			}
 			catch(Exception e) {
-				display("Exception, fermeture du server and clients: " + e);
+				display("Exception, fermeture du serveur et déconnexion des clients: " + e);
 			}
 		}
 		catch (IOException e) {
@@ -160,7 +159,7 @@ public class Server {
 		return true;
 	}
 
-	// pour supprimer un client de la liste des clients connectés (si il se déconnecte avec un bye)
+	// pour supprimer un client de la liste des clients connectés (s'il se déconnecte avec un bye)
 	synchronized void remove(int id) {
 		String disconnectedClient = "";
 		// on itère sur la liste des clients connectés, pour trouver le client concerné
@@ -175,10 +174,10 @@ public class Server {
 		}
 		broadcast(notif + " %s has left the chat room." + notif,disconnectedClient);
 	}
-	
+
 	/*
 	 * Si le portNumber n'est pas spécifié, 1500 est utilisé
-	 */ 
+	 */
 	public static void main(String[] args) throws NoSuchPaddingException, NoSuchAlgorithmException {
 		int portNumber = 1500;
 		// creation du serveur avec le port spécifié et on le démarre
@@ -250,10 +249,6 @@ public class Server {
 			return username;
 		}
 
-		public void setUsername(String username) {
-			this.username = username;
-		}
-
 		// boucle infinie pour écouter les messages des clients
 		public void run() {
             // boucler jusqu'à ce que le client se déconnecte, (avec un bye)
@@ -271,8 +266,10 @@ public class Server {
 					break;
 				}
 				// on récupère le message de l'objet Message
-				String message = cm.getMessage();
-
+				Object message = cm.getMessage();
+//				if (message instanceof byte[]){
+//					System.out.println("MES COUILLES A SKI");
+//				}
 				// on check le type du message, pour traiter les cas : USERS, MESSAGE, bye
 				switch (cm.getType()) {
 					// MESSAGE pour un message normal
