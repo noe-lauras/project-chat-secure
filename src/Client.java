@@ -21,7 +21,7 @@ public class Client  {
 	private final AES aes; 				// clé de cryptage AES
 
 	/*
-	 * Constructeur appelé par la console
+	 * Constructeur appelé par ClientGUI
 	 * server: le serveur
 	 * port: le port
 	 * username: le nom d'utilisateur
@@ -93,7 +93,7 @@ public class Client  {
 	/*
 	 * Pour envoyer un message au serveur
 	 */
-	private void sendMessage(Message msg) {
+	 void sendMessage(Message msg) {
 		try {
 			System.out.println(msg.getMessage());
 			// on encrypte le message
@@ -109,7 +109,7 @@ public class Client  {
 	/*
 	 * Si le client se deconnecte, on ferme les flux et le socket
 	 */
-	private void disconnect() {
+	void disconnect() {
 		try {
 			if(sInput != null) sInput.close();
 		}
@@ -154,6 +154,7 @@ public class Client  {
 		System.out.println("Attention à bien respecter l'espace entre le nom d'utilisateur et le message.");
 		System.out.println("3. Tapez USERS pour voir la liste des utilisateurs connectés");
 		System.out.println("4. Tapez bye pour déconnecter du serveur");
+
 
 		// boucle infinie pour lire le message de l'utilisateur et l'envoyer au serveur
 		while(true) {

@@ -175,15 +175,7 @@ public class Server {
 		broadcast(notif + " %s has left the chat room." + notif,disconnectedClient);
 	}
 
-	/*
-	 * Si le portNumber n'est pas spécifié, 1500 est utilisé
-	 */
-	public static void main(String[] args) throws NoSuchPaddingException, NoSuchAlgorithmException {
-		int portNumber = 1500;
-		// creation du serveur avec le port spécifié et on le démarre
-		Server server = new Server(portNumber);
-		server.start();
-	}
+
 
 	// un thread pour chaque client
 	class ClientThread extends Thread {
