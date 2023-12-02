@@ -6,10 +6,12 @@ class AES {
     KeyGenerator kg;
     Key key;
     Cipher cipher;
-    void genereKey()throws NoSuchAlgorithmException, NoSuchPaddingException {
+    AES() throws NoSuchPaddingException, NoSuchAlgorithmException {
+        cipher=Cipher.getInstance("AES");
          kg=KeyGenerator.getInstance("AES");
+    }
+    void genereKey()throws NoSuchAlgorithmException {
          key= kg.generateKey();
-         cipher=Cipher.getInstance("AES");
     }
 
     byte[] encrypt(String message){

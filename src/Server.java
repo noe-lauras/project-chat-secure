@@ -1,35 +1,36 @@
+import javax.crypto.NoSuchPaddingException;
 import java.io.*;
 import java.net.*;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 
 public class Server {
-
 	AES aes = new AES();
 
 	// unique id pour chaque client, plus facile pour la déconnexion
 	private static int uniqueId;
 	// ArrayList pour la liste des clients connectés
-	private ArrayList<ClientThread> al;
+	private final ArrayList<ClientThread> al;
 	// affichage de l'heure et de la date
-	private SimpleDateFormat sdf;
+	private final SimpleDateFormat sdf;
 	//  port de connection
-	private int port;
+	private final int port;
 	// boolean pour savoir si le serveur est actif
 	private boolean estActif;
 	// notification
-	private String notif = " *** ";
+	private final String notif = " *** ";
 	
 	//le constructeur ne reçoit que le port à écouter pour la connection en paramètre
 	
-	public Server(int port) {
+	public Server(int port) throws NoSuchPaddingException, NoSuchAlgorithmException {
 		// port
 		this.port = port;
 		// format pour la date 
 		sdf = new SimpleDateFormat("HH:mm:ss");
 		// ArrayList pour la liste des clients connectés
-		al = new ArrayList<ClientThread>();
+		al = new ArrayList<>();
 	}
 	
 	public void start() {
@@ -59,20 +60,18 @@ public class Server {
 			// si on n'est plus actif on ferme le serveur
 			try {
 				serverSocket.close();
-				for(int i = 0; i < al.size(); ++i) {
-					ClientThread tc = al.get(i);
+				for (ClientThread tc : al) {
 					try {
-					// on ferme les flux de sortie et d'entrée ainsi que le socket de chaque client
-					tc.sInput.close();
-					tc.sOutput.close();
-					tc.socket.close();
-					}
-					catch(IOException ioE) {
+						// on ferme les flux de sortie et d'entrée ainsi que le socket de chaque client
+						tc.sInput.close();
+						tc.sOutput.close();
+						tc.socket.close();
+					} catch (IOException ignored) {
 					}
 				}
 			}
 			catch(Exception e) {
-				display("Exception, fermeture du server and clients: " + e);
+				display("Exception, fermeture du serveur et déconnexion des clients: " + e);
 			}
 		}
 		catch (IOException e) {
@@ -80,20 +79,13 @@ public class Server {
 			display(msg);
 		}
 	}
-	
+
 	// pour stopper le serveur
 	protected void stop() {
         // on change le boolean pour ne plus être actif
 		estActif = false;
-        /*
-		try {
-			new Socket("localhost", port);
-		}
-		catch(Exception e) {
-		}
-         */
 	}
-	
+
 	// Affichage (display) de n'importe quel event dans la console
 	private void display(String msg) {
 		String time = sdf.format(new Date()) + " " + msg;
@@ -101,22 +93,27 @@ public class Server {
 	}
 	
 	// diffuser (broadcast) un message à tous les clients connectés 
-	private synchronized boolean broadcast(String message) {
+	private synchronized boolean broadcast(Object msg,String user) {
+		String message;
+		if (msg instanceof String){
+			message=String.format((String) msg,user);
+		}
+		else{
+			message=user+": "+aes.decrypt((byte[]) msg);
+		}
 		// ajouter l'heure au message
 		String time = sdf.format(new Date());
 		
 		// on check si le message est un message privé
 		String[] w = message.split(" ",3);
 		
-		boolean isPrivate = false;
-		if(w[1].charAt(0)=='@') 
-			isPrivate=true;
-		
-		
+		boolean isPrivate = w[1].charAt(0) == '@';
+
+
 		// le message est privé, on l'envoie au client concerné
-		if(isPrivate==true)
+		if(isPrivate)
 		{
-			String tocheck=w[1].substring(1, w[1].length());
+			String tocheck=w[1].substring(1);
 			
 			message=w[0]+w[2];
 			String messageLf = time + " " + message + "\n";
@@ -140,10 +137,7 @@ public class Server {
 				}	
 			}
 			// le client n'existe pas
-			if(found!=true)
-			{
-				return false; 
-			}
+			return found;
 		}
 		// le message n'est pas privé, on l'envoie à tous les clients
 		else
@@ -165,7 +159,7 @@ public class Server {
 		return true;
 	}
 
-	// pour supprimer un client de la liste des clients connectés (si il se déconnecte avec un bye)
+	// pour supprimer un client de la liste des clients connectés (s'il se déconnecte avec un bye)
 	synchronized void remove(int id) {
 		String disconnectedClient = "";
 		// on itère sur la liste des clients connectés, pour trouver le client concerné
@@ -178,13 +172,13 @@ public class Server {
 				break;
 			}
 		}
-		broadcast(notif + disconnectedClient + " has left the chat room." + notif);
+		broadcast(notif + " %s has left the chat room." + notif,disconnectedClient);
 	}
-	
+
 	/*
 	 * Si le portNumber n'est pas spécifié, 1500 est utilisé
-	 */ 
-	public static void main(String[] args) {
+	 */
+	public static void main(String[] args) throws NoSuchPaddingException, NoSuchAlgorithmException {
 		int portNumber = 1500;
 		// creation du serveur avec le port spécifié et on le démarre
 		Server server = new Server(portNumber);
@@ -220,13 +214,12 @@ public class Server {
 				// on lit le nom d'utilisateur
 				username = (String) sInput.readObject();
 
-				broadcast(notif + username + " has joined the chat room." + notif);
+				broadcast(notif + "%s has joined the chat room." + notif,username);
 
 				// si aes n'est pas instancié, on le fait
 				if (aes.key == null) {
 					try {
 						aes.genereKey();
-						System.out.println("AES key generated : "+ aes.key.toString());
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -237,14 +230,14 @@ public class Server {
 				display("Exception creating new Input/output Streams: " + e);
 				return;
 			}
-			catch (ClassNotFoundException e) {
+			catch (ClassNotFoundException ignored) {
 			}
-            date = new Date().toString() + "\n";
+            date = new Date() + "\n";
 		}
-		private void sendAESKey() {
+		 private void sendAESKey() {
         try {
-            sOutput.writeObject(aes.key.getEncoded()); // Envoie la clé AES au client
-			System.out.println("AES key sent to client : " + aes.toString1(aes.key));
+			System.out.println(Arrays.toString(aes.key.getEncoded()));
+            sOutput.writeObject(aes.key); // Envoie la clé AES au client
         } catch(IOException e) {
             display("Error sending AES key to " + username);
             e.printStackTrace();
@@ -254,10 +247,6 @@ public class Server {
 		
 		public String getUsername() {
 			return username;
-		}
-
-		public void setUsername(String username) {
-			this.username = username;
 		}
 
 		// boucle infinie pour écouter les messages des clients
@@ -277,32 +266,34 @@ public class Server {
 					break;
 				}
 				// on récupère le message de l'objet Message
-				String message = cm.getMessage();
-
+				Object message = cm.getMessage();
+//				if (message instanceof byte[]){
+//					System.out.println("MES COUILLES A SKI");
+//				}
 				// on check le type du message, pour traiter les cas : USERS, MESSAGE, bye
-				switch(cm.getType()) {
-                // MESSAGE pour un message normal
-				case Message.MESSAGE:
-					boolean confirmation =  broadcast(username + ": " + message);
-					if(!confirmation){
-						String msg = notif + "Sorry. No such user exists." + notif;
-						writeMsg(msg);
+				switch (cm.getType()) {
+					// MESSAGE pour un message normal
+					case Message.MESSAGE -> {
+						boolean confirmation = broadcast(message,username);
+						if (!confirmation) {
+							String msg = notif + "Sorry. No such user exists." + notif;
+							writeMsg(msg);
+						}
 					}
-					break;
-                // bye pour se déconnecter
-				case Message.bye:
-					display(username + " disconnected with a LOGOUT message.");
-					keepGoing = false;
-					break;
-                // USERS pour la liste des utilisateurs connectés
-				case Message.USERS:
-					writeMsg("List of the users connected at " + sdf.format(new Date()) + "\n");
-					// on itère sur la liste des clients connectés, pour envoyer la liste à l'utilisateur
-					for(int i = 0; i < al.size(); ++i) {
-						ClientThread ct = al.get(i);
-						writeMsg((i+1) + ") " + ct.username + " since " + ct.date);
+					// bye pour se déconnecter
+					case Message.bye -> {
+						display(username + " disconnected with a LOGOUT message.");
+						keepGoing = false;
 					}
-					break;
+					// USERS pour la liste des utilisateurs connectés
+					case Message.USERS -> {
+						writeMsg("List of the users connected at " + sdf.format(new Date()) + "\n");
+						// on itère sur la liste des clients connectés, pour envoyer la liste à l'utilisateur
+						for (int i = 0; i < al.size(); ++i) {
+							ClientThread ct = al.get(i);
+							writeMsg((i + 1) + ") " + ct.username + " since " + ct.date);
+						}
+					}
 				}
 			}
 			// si on sort de la boucle, on déconnecte le client de la liste des clients connectés
