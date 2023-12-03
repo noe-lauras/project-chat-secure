@@ -133,7 +133,7 @@ public class Client  {
 	public static void main(String[] args) throws NoSuchPaddingException, NoSuchAlgorithmException {
 		// valeurs par défaut si pas d'arguments
 		int portNumber = 1500;
-		String serverAddress = "localhost";
+		String serverAddress = "192.168.8.188";
 		String userName = "Anonymous";
 		Scanner scan = new Scanner(System.in);
 
