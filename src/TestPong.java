@@ -2,7 +2,7 @@ import java.io.IOException;
 import java.net.*;
 
 public class TestPong {
-    public static void main(String[] args) {
+    public static void pong(){
         int receivePort = 1500; // Port pour recevoir les messages
         int sendPort = 1501; // Port pour envoyer les réponses
 
@@ -26,11 +26,14 @@ public class TestPong {
                     responseSocket.send(responsePacket);
                     responseSocket.close();
                     //System.out.println("Message envoyé avec succès !");
+                    socket.close();
                 }
             }
             // Ajouter la fermeture de la socket ici si nécessaire, par exemple sur un signal de sortie.
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ignored) {
         }
+    }
+    public static void main(String[] args) {
+        pong();
     }
 }

@@ -19,6 +19,7 @@ public class Server {
 	private final int port;
 	// boolean pour savoir si le serveur est actif
 	private boolean estActif;
+	private static boolean keepGoing=true;
 	// notification
 	private final String notif = " *** ";
 	
@@ -32,9 +33,42 @@ public class Server {
 		// ArrayList pour la liste des clients connectés
 		al = new ArrayList<>();
 	}
-	
+	//Fonction qui attend qu'un client ping
+	public static void pong(){
+        int receivePort = 1500; // Port pour recevoir les messages
+        int sendPort = 1501; // Port pour envoyer les réponses
+
+        try {
+            DatagramSocket socket = new DatagramSocket(receivePort);
+            //System.out.println("En attente de messages...");
+            while (keepGoing) {
+                byte[] receiveData = new byte[1024];
+                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                socket.receive(receivePacket);
+                InetAddress clientAddress = receivePacket.getAddress();
+                String message = new String(receivePacket.getData(), 0, receivePacket.getLength());
+
+                if (message.equals("Serveur je te parle")) {
+                    DatagramSocket responseSocket = new DatagramSocket();
+                    String responseMessage = "Client je te réponds";
+                    byte[] sendData = responseMessage.getBytes();
+
+                    InetAddress destinationAddress = InetAddress.getByName(clientAddress.getHostAddress());
+                    DatagramPacket responsePacket = new DatagramPacket(sendData, sendData.length, destinationAddress, sendPort);
+                    responseSocket.send(responsePacket);
+                    responseSocket.close();
+                    //System.out.println("Message envoyé avec succès !");
+                }
+            }
+			socket.close();
+            // Ajouter la fermeture de la socket ici si nécessaire, par exemple sur un signal de sortie.
+        } catch (IOException ignored) {
+        }
+    }
 	public void start() {
 		estActif = true;
+		// Démarre le thread pour écouter les requêtes UDP
+    	new Thread(Server::pong).start();
 		//creation du socket serveur et ecoute sur le port
 		try 
 		{
@@ -252,7 +286,7 @@ public class Server {
 		// boucle infinie pour écouter les messages des clients
 		public void run() {
             // boucler jusqu'à ce que le client se déconnecte, (avec un bye)
-			boolean keepGoing = true;
+			keepGoing = true;
 			while(keepGoing) {
 				// lire le message envoyé par le client, on cast en Message car c'est un objet
 				try {
