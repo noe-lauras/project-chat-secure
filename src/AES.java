@@ -8,10 +8,10 @@ class AES {
     Cipher cipher;
     AES() throws NoSuchPaddingException, NoSuchAlgorithmException {
         cipher=Cipher.getInstance("AES");
-         kg=KeyGenerator.getInstance("AES");
+        kg=KeyGenerator.getInstance("AES");
     }
     void genereKey()throws NoSuchAlgorithmException {
-         key= kg.generateKey();
+        key= kg.generateKey();
     }
 
     byte[] encrypt(String message){

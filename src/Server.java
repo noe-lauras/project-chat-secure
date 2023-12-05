@@ -22,66 +22,66 @@ public class Server {
 	private static boolean keepGoing=true;
 	// notification
 	private final String notif = " *** ";
-	
+
 	//le constructeur ne reçoit que le port à écouter pour la connection en paramètre
-	
+
 	public Server(int port) throws NoSuchPaddingException, NoSuchAlgorithmException {
 		// port
 		this.port = port;
-		// format pour la date 
-		sdf = new SimpleDateFormat("HH:mm:ss");
+		// format pour la date
+		sdf = new SimpleDateFormat("HH:mm");
 		// ArrayList pour la liste des clients connectés
 		al = new ArrayList<>();
 	}
 	//Fonction qui attend qu'un client ping
 	public static void pong(){
-        int receivePort = 1500; // Port pour recevoir les messages
-        int sendPort = 1501; // Port pour envoyer les réponses
+		int receivePort = 1500; // Port pour recevoir les messages
+		int sendPort = 1501; // Port pour envoyer les réponses
 
-        try {
-            DatagramSocket socket = new DatagramSocket(receivePort);
-            //System.out.println("En attente de messages...");
-            while (keepGoing) {
-                byte[] receiveData = new byte[1024];
-                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-                socket.receive(receivePacket);
-                InetAddress clientAddress = receivePacket.getAddress();
-                String message = new String(receivePacket.getData(), 0, receivePacket.getLength());
+		try {
+			DatagramSocket socket = new DatagramSocket(receivePort);
+			//System.out.println("En attente de messages...");
+			while (keepGoing) {
+				byte[] receiveData = new byte[1024];
+				DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+				socket.receive(receivePacket);
+				InetAddress clientAddress = receivePacket.getAddress();
+				String message = new String(receivePacket.getData(), 0, receivePacket.getLength());
 
-                if (message.equals("Serveur je te parle")) {
-                    DatagramSocket responseSocket = new DatagramSocket();
-                    String responseMessage = "Client je te réponds";
-                    byte[] sendData = responseMessage.getBytes();
+				if (message.equals("Serveur je te parle")) {
+					DatagramSocket responseSocket = new DatagramSocket();
+					String responseMessage = "Client je te réponds";
+					byte[] sendData = responseMessage.getBytes();
 
-                    InetAddress destinationAddress = InetAddress.getByName(clientAddress.getHostAddress());
-                    DatagramPacket responsePacket = new DatagramPacket(sendData, sendData.length, destinationAddress, sendPort);
-                    responseSocket.send(responsePacket);
-                    responseSocket.close();
-                    //System.out.println("Message envoyé avec succès !");
-                }
-            }
+					InetAddress destinationAddress = InetAddress.getByName(clientAddress.getHostAddress());
+					DatagramPacket responsePacket = new DatagramPacket(sendData, sendData.length, destinationAddress, sendPort);
+					responseSocket.send(responsePacket);
+					responseSocket.close();
+					//System.out.println("Message envoyé avec succès !");
+				}
+			}
 			socket.close();
-            // Ajouter la fermeture de la socket ici si nécessaire, par exemple sur un signal de sortie.
-        } catch (IOException ignored) {
-        }
-    }
+			// Ajouter la fermeture de la socket ici si nécessaire, par exemple sur un signal de sortie.
+		} catch (IOException ignored) {
+		}
+	}
 	public void start() {
 		estActif = true;
 		// Démarre le thread pour écouter les requêtes UDP
-    	new Thread(Server::pong).start();
+		new Thread(Server::pong).start();
 		//creation du socket serveur et ecoute sur le port
-		try 
+		try
 		{
-			// le socket serveur 
+			// le socket serveur
 			ServerSocket serverSocket = new ServerSocket(port);
 
 			// boucle infinie pour attendre les connexions des clients
-			while(estActif) 
+			while(estActif)
 			{
 				display("Server waiting for Clients on port " + port + ".");
 				// accepte la connection si le client est connecté
 				Socket socket = serverSocket.accept();
-				// on casse la boucle si le serveur n'est plus actif 
+				// on casse la boucle si le serveur n'est plus actif
 				if(!estActif)
 					break;
 				// creation d'un thread pour le client
@@ -109,38 +109,35 @@ public class Server {
 			}
 		}
 		catch (IOException e) {
-            String msg = sdf.format(new Date()) + " Exception sur le ServerSocket: " + e + "\n";
+			String msg = sdf.format(new Date()) + " Exception sur le ServerSocket: " + e + "\n";
 			display(msg);
 		}
 	}
 
 	// pour stopper le serveur
 	protected void stop() {
-        // on change le boolean pour ne plus être actif
+		// on change le boolean pour ne plus être actif
 		estActif = false;
 	}
 
 	// Affichage (display) de n'importe quel event dans la console
 	private void display(String msg) {
-		String time = sdf.format(new Date()) + " " + msg;
-		System.out.println(time);
-	}
-	
-	// diffuser (broadcast) un message à tous les clients connectés 
-	private synchronized boolean broadcast(Object msg,String user) {
-		String message;
-		if (msg instanceof String){
-			message=String.format((String) msg,user);
-		}
-		else{
-			message=user+": "+aes.decrypt((byte[]) msg);
-		}
-		// ajouter l'heure au message
 		String time = sdf.format(new Date());
-		
+		String formattedMsg = String.format("| %s | %s", time, msg);
+		System.out.println(formattedMsg);
+	}
+
+	// diffuser (broadcast) un message à tous les clients connectés
+	private synchronized boolean broadcast(Object msg, String user) {
+		String time = sdf.format(new Date());
+		String message;
+		if (msg instanceof String) {
+			message = String.format("%s | %s", user, msg);
+		} else {
+			message = String.format("%s | %s", user, aes.decrypt((byte[]) msg));
+		}
 		// on check si le message est un message privé
-		String[] w = message.split(" ",3);
-		
+		String[] w = message.split(" ", 3);
 		boolean isPrivate = w[1].charAt(0) == '@';
 
 
@@ -148,7 +145,7 @@ public class Server {
 		if(isPrivate)
 		{
 			String tocheck=w[1].substring(1);
-			
+
 			message=w[0]+w[2];
 			String messageLf = time + " " + message + "\n";
 			boolean found=false;
@@ -160,7 +157,7 @@ public class Server {
 				if(check.equals(tocheck))
 				{
 					// on essaye d'envoyer le message au client, si ça ne marche pas on le supprime de la liste
-                    // --> ça veut dire qu'il n'est plus connecté
+					// --> ça veut dire qu'il n'est plus connecté
 					if(!ct1.writeMsg(messageLf)) {
 						al.remove(y);
 						display("Disconnected Client " + ct1.username + " removed from list.");
@@ -168,7 +165,7 @@ public class Server {
 					// on a trouvé le client, on sort de la boucle
 					found=true;
 					break;
-				}	
+				}
 			}
 			// le client n'existe pas
 			return found;
@@ -183,7 +180,7 @@ public class Server {
 			for(int i = al.size(); --i >= 0;) {
 				ClientThread ct = al.get(i);
 				// on essaye d'envoyer le message au client, si ça ne marche pas on le supprime de la liste
-                // --> ça veut dire qu'il n'est plus connecté
+				// --> ça veut dire qu'il n'est plus connecté
 				if(!ct.writeMsg(messageLf)) {
 					al.remove(i);
 					display("Disconnected Client " + ct.username + " removed from list.");
@@ -209,6 +206,9 @@ public class Server {
 		broadcast(notif + " %s has left the chat room." + notif,disconnectedClient);
 	}
 
+	/*
+	 * Si le portNumber n'est pas spécifié, 1500 est utilisé
+	 */
 
 
 	// un thread pour chaque client
@@ -221,7 +221,7 @@ public class Server {
 		int id;
 		// le nom d'utilisateur
 		String username;
-        // le message est un objet pour pouvoir envoyer le type du message (MESSAGE, USERS, bye)
+		// le message est un objet pour pouvoir envoyer le type du message (MESSAGE, USERS, bye)
 		Message cm;
 		// la date
 		String date;
@@ -258,26 +258,26 @@ public class Server {
 			}
 			catch (ClassNotFoundException ignored) {
 			}
-            date = new Date() + "\n";
+			date = new Date() + "\n";
 		}
-		 private void sendAESKey() {
-        try {
-			System.out.println(Arrays.toString(aes.key.getEncoded()));
-            sOutput.writeObject(aes.key); // Envoie la clé AES au client
-        } catch(IOException e) {
-            display("Error sending AES key to " + username);
-            e.printStackTrace();
-        }
-    }
+		private void sendAESKey() {
+			try {
+				System.out.println(Arrays.toString(aes.key.getEncoded()));
+				sOutput.writeObject(aes.key); // Envoie la clé AES au client
+			} catch(IOException e) {
+				display("Error sending AES key to " + username);
+				e.printStackTrace();
+			}
+		}
 
-		
+
 		public String getUsername() {
 			return username;
 		}
 
 		// boucle infinie pour écouter les messages des clients
 		public void run() {
-            // boucler jusqu'à ce que le client se déconnecte, (avec un bye)
+			// boucler jusqu'à ce que le client se déconnecte, (avec un bye)
 			keepGoing = true;
 			while(keepGoing) {
 				// lire le message envoyé par le client, on cast en Message car c'est un objet
@@ -286,7 +286,7 @@ public class Server {
 				}
 				catch (IOException e) {
 					display(username + " Exception reading Streams: " + e);
-					break;				
+					break;
 				}
 				catch(ClassNotFoundException e2) {
 					break;
@@ -326,7 +326,7 @@ public class Server {
 			remove(id);
 			close();
 		}
-		
+
 		private void close() {
 			try {
 				if(sOutput != null) sOutput.close();
@@ -342,9 +342,9 @@ public class Server {
 			catch (Exception ignored) {}
 		}
 
-        // écrire un message dans le flux de sortie du client (sOutput, ObjectOutputStream)
+		// écrire un message dans le flux de sortie du client (sOutput, ObjectOutputStream)
 		private boolean writeMsg(String msg) {
-			// on check si le socket est connecté, si non on ferme le flux de sortie 
+			// on check si le socket est connecté, si non on ferme le flux de sortie
 			if(!socket.isConnected()) {
 				close();
 				return false;
