@@ -2,14 +2,14 @@ import java.io.IOException;
 import java.net.*;
 
 public class TestPing {
-    public static void main(String[] args) {
-        int sendPort = 1500; // Port pour envoyer le message
+    public static String ping(){
+                int sendPort = 1500; // Port pour envoyer le message
         int receivePort = 1501; // Port pour recevoir les réponses
-        String adresseServeur;
+        String adresseServeur="";
         // Message à envoyer
         String message = "Serveur je te parle";
 
-        DatagramSocket socketReception = null;
+        DatagramSocket socketReception;
         try {
             socketReception = new DatagramSocket(receivePort);
             //System.out.println("En attente de messages...");
@@ -30,17 +30,16 @@ public class TestPing {
                 InetAddress clientAddress = receivePacket.getAddress();
                 String message2 = new String(receivePacket.getData(), 0, receivePacket.getLength());
                 if(message2.equals("Client je te réponds")){
-                     //System.out.println(message2);
+                     System.out.println(message2);
                      adresseServeur=clientAddress.getHostAddress();
-                    //System.out.println(adresseServeur);
+                    System.out.println(adresseServeur);
+                    socketReception.close();
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (socketReception != null && !socketReception.isClosed()) {
-                socketReception.close();
-            }
-        }
+        } catch (IOException ignored) {}
+        return adresseServeur;
+    }
+    public static void main(String[] args) {
+        System.out.println(ping());
     }
 }

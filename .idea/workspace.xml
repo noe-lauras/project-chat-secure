@@ -4,6 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
+<<<<<<< HEAD
     <list default="true" id="2c6ef701-35b2-4578-a5b7-99d90fab3bee" name="Changes" comment="CA MENERVE !!!!">
       <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/MessageListener.java" afterDir="false" />
@@ -13,6 +14,14 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Client.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/ClientGUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ClientGUI.java" afterDir="false" />
+=======
+    <list default="true" id="2c6ef701-35b2-4578-a5b7-99d90fab3bee" name="Changes" comment="Ping pong entre le client et le serveur (pour l'instant dans des classes séparées) pour savoir l'IP du serveur. Pour se faire, le client ping tout le réseau (broadcast) et la personne qui lui répond bah c'est forcement le serveur (tu verras sur le code que ça ne peut être que lui).&#10;J'ai laissé les prints en commentaire au cas où tu veuilles tester ^^">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Client.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Server.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/TestPing.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/TestPing.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/TestPong.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/TestPong.java" afterDir="false" />
+>>>>>>> 82d528b592696e7f9ca173ee5d356894532fb1de
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,7 +57,11 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+<<<<<<< HEAD
     &quot;git-widget-placeholder&quot;: &quot;Merging main&quot;,
+=======
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+>>>>>>> 82d528b592696e7f9ca173ee5d356894532fb1de
     &quot;last_opened_file_path&quot;: &quot;/Users/lauras/Documents/FAC/S5/Réseaux/Projet2/project-chat-secure&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
@@ -86,10 +99,14 @@
       <workItem from="1700473974051" duration="428000" />
       <workItem from="1701077647861" duration="5805000" />
       <workItem from="1701197833931" duration="1323000" />
+<<<<<<< HEAD
       <workItem from="1701602671792" duration="11000" />
       <workItem from="1701681180524" duration="199000" />
       <workItem from="1701697515322" duration="5000" />
       <workItem from="1701764804956" duration="1025000" />
+=======
+      <workItem from="1701682210353" duration="5535000" />
+>>>>>>> 82d528b592696e7f9ca173ee5d356894532fb1de
     </task>
     <task id="LOCAL-00001" summary="first commit">
       <created>1699870033476</created>
@@ -136,7 +153,14 @@
       <option name="project" value="LOCAL" />
       <updated>1700478667278</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Ping pong entre le client et le serveur (pour l'instant dans des classes séparées) pour savoir l'IP du serveur. Pour se faire, le client ping tout le réseau (broadcast) et la personne qui lui répond bah c'est forcement le serveur (tu verras sur le code que ça ne peut être que lui).&#10;J'ai laissé les prints en commentaire au cas où tu veuilles tester ^^">
+      <created>1701612958321</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1701612958321</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -159,6 +183,7 @@
     <MESSAGE value="Création classe AES" />
     <MESSAGE value="_" />
     <MESSAGE value="ToString AES" />
-    <option name="LAST_COMMIT_MESSAGE" value="ToString AES" />
+    <MESSAGE value="Ping pong entre le client et le serveur (pour l'instant dans des classes séparées) pour savoir l'IP du serveur. Pour se faire, le client ping tout le réseau (broadcast) et la personne qui lui répond bah c'est forcement le serveur (tu verras sur le code que ça ne peut être que lui).&#10;J'ai laissé les prints en commentaire au cas où tu veuilles tester ^^" />
+    <option name="LAST_COMMIT_MESSAGE" value="Ping pong entre le client et le serveur (pour l'instant dans des classes séparées) pour savoir l'IP du serveur. Pour se faire, le client ping tout le réseau (broadcast) et la personne qui lui répond bah c'est forcement le serveur (tu verras sur le code que ça ne peut être que lui).&#10;J'ai laissé les prints en commentaire au cas où tu veuilles tester ^^" />
   </component>
 </project>
