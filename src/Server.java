@@ -203,7 +203,7 @@ public class Server {
 				break;
 			}
 		}
-		broadcast(notif + " %s has left the chat room." + notif,disconnectedClient);
+		broadcast(notif + " " + disconnectedClient + " has left the chat room." + notif, "Server");
 	}
 
 	/*
@@ -240,7 +240,7 @@ public class Server {
 				// on lit le nom d'utilisateur
 				username = (String) sInput.readObject();
 
-				broadcast(notif + "%s has joined the chat room." + notif,username);
+				broadcast(notif + username+ " has joined the chat room." + notif,"Server");
 
 				// si aes n'est pas instancié, on le fait
 				if (aes.key == null) {
