@@ -6,13 +6,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 
-public class ClientGUI extends JFrame {
-
+public class ClientGUI extends JFrame implements MessageListener {
     private Client client;
     private final JTextField messageField;
     private final JTextArea chatArea;
 
     public ClientGUI(int port, String server, String username) throws NoSuchPaddingException, NoSuchAlgorithmException {
+
         // Initialisation de la fenêtre
         setTitle("Secure Chat Client");
         // quand on ferme la fenêtre, on déconnecte le client
@@ -57,6 +57,9 @@ public class ClientGUI extends JFrame {
             return;
         }
 
+        // on implémente l'interface MessageListener pour recevoir les messages du serveur
+        client.setMessageListener(this);
+
         // on affiche le message de bienvenue
         appendMessage("------------------------------------\n");
         appendMessage("Welcome " + username + "\n");
@@ -88,8 +91,9 @@ public class ClientGUI extends JFrame {
         else {
             // sinon, on envoie un message normal
             client.sendMessage(new Message(Message.MESSAGE, msg));
-            this.appendMessage("Me: " + msg);
         }
+        // on efface le champ de message
+        clearMessage();
     }
 
     public void appendMessage(String message) {
@@ -113,6 +117,17 @@ public class ClientGUI extends JFrame {
         System.exit(0);
     }
 
+    @Override
+    public void onMessageReceived(String message) {
+        SwingUtilities.invokeLater(() -> {
+            // on affiche le message reçu
+            appendMessage(message);
+        });
+    }
+
+    public interface MessageListener {
+        void onMessageReceived(String message);
+    }
 
 
 }
