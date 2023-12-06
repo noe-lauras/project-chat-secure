@@ -44,4 +44,7 @@ class AES {
         }
         return res;
     }
+    Key getSecretKey() {
+        return key;
+    }
 }

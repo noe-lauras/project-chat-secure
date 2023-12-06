@@ -136,7 +136,7 @@ public class Client  {
 	/*
 	 * Pour envoyer un message au serveur
 	 */
-	 void sendMessage(Message msg) {
+	void sendMessage(Message msg) {
 		try {
 			System.out.println(msg.getMessage());
 			// on encrypte le message
@@ -152,7 +152,7 @@ public class Client  {
 	/*
 	 * Si le client se deconnecte, on ferme les flux et le socket
 	 */
-	 void disconnect() {
+	void disconnect() {
 		try {
 			if(sInput != null) sInput.close();
 		}

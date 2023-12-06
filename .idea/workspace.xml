@@ -4,7 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2c6ef701-35b2-4578-a5b7-99d90fab3bee" name="Changes" comment="Ping pong entre le client et le serveur (pour l'instant dans des classes séparées) pour savoir l'IP du serveur. Pour se faire, le client ping tout le réseau (broadcast) et la personne qui lui répond bah c'est forcement le serveur (tu verras sur le code que ça ne peut être que lui).&#10;J'ai laissé les prints en commentaire au cas où tu veuilles tester ^^" />
+    <list default="true" id="2c6ef701-35b2-4578-a5b7-99d90fab3bee" name="Changes" comment="Ping pong entre le client et le serveur (pour l'instant dans des classes séparées) pour savoir l'IP du serveur. Pour se faire, le client ping tout le réseau (broadcast) et la personne qui lui répond bah c'est forcement le serveur (tu verras sur le code que ça ne peut être que lui).&#10;J'ai laissé les prints en commentaire au cas où tu veuilles tester ^^">
+      <change afterPath="$PROJECT_DIR$/src/DHKey.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/AES.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/AES.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Client.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -90,7 +95,7 @@
       <workItem from="1701682210353" duration="5535000" />
       <workItem from="1701773695077" duration="152000" />
       <workItem from="1701791005206" duration="1436000" />
-      <workItem from="1701849245538" duration="1343000" />
+      <workItem from="1701849245538" duration="12080000" />
     </task>
     <task id="LOCAL-00001" summary="first commit">
       <created>1699870033476</created>
