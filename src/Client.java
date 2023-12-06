@@ -2,13 +2,11 @@ import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.Socket;
+import java.net.*;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Random;
 import java.util.Scanner;
 
 
@@ -38,42 +36,43 @@ public class Client  {
 	}
 		//Fonction qui permet de récupérer directement l'IP du serveur sans la taper en dur
 	    public static String ping(){
-                int sendPort = 1500; // Port pour envoyer le message
-        int receivePort = 1501; // Port pour recevoir les réponses
-        String adresseServeur="";
-        // Message à envoyer
-        String message = "Serveur je te parle";
+			int sendPort = 1500; // Port pour envoyer le message
+			int receivePort = 1501; // Port pour recevoir les réponses
+			String adresseServeur="";
+			// Message à envoyer
+			String message = "Serveur je te parle";
 
-        DatagramSocket socketReception;
-        try {
-            socketReception = new DatagramSocket(receivePort);
-            //System.out.println("En attente de messages...");
+			DatagramSocket socketReception;
+			try {
+				socketReception = new DatagramSocket(receivePort);
+				// Défini un timeout de 5 secondes pour sortir si on attend trop
+				socketReception.setSoTimeout(5000);
+				//System.out.println("En attente de messages...");
 
-            DatagramSocket socketEnvoi = new DatagramSocket();
-            byte[] messageBytes = message.getBytes();
-            InetAddress broadcastAddress = InetAddress.getByName("255.255.255.255");
-            DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, broadcastAddress, sendPort);
-            socketEnvoi.send(packet);
-            socketEnvoi.close();
-            //System.out.println("Message envoyé avec succès !");
+				DatagramSocket socketEnvoi = new DatagramSocket();
+				byte[] messageBytes = message.getBytes();
+				InetAddress broadcastAddress = InetAddress.getByName("255.255.255.255");
+				DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, broadcastAddress, sendPort);
+				socketEnvoi.send(packet);
+				socketEnvoi.close();
+				//System.out.println("Message envoyé avec succès !");
+				byte[] receiveData = new byte[1024];
+				DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+				socketReception.receive(receivePacket);
 
-            while (true) {
-                byte[] receiveData = new byte[1024];
-                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-                socketReception.receive(receivePacket);
-
-                InetAddress clientAddress = receivePacket.getAddress();
-                String message2 = new String(receivePacket.getData(), 0, receivePacket.getLength());
-                if(message2.equals("Client je te réponds")){
-                     System.out.println(message2);
-                     adresseServeur=clientAddress.getHostAddress();
-                    System.out.println(adresseServeur);
-                    socketReception.close();
-                }
-            }
-        } catch (IOException ignored) {}
-        return adresseServeur;
-    }
+				InetAddress clientAddress = receivePacket.getAddress();
+				String message2 = new String(receivePacket.getData(), 0, receivePacket.getLength());
+				if(message2.equals("Client je te réponds")){
+					 System.out.println(message2);
+					 adresseServeur=clientAddress.getHostAddress();
+					System.out.println(adresseServeur);
+					socketReception.close();
+				}
+			} catch (SocketTimeoutException e) {
+			System.out.println("Erreur: Le délai d'attente pour la réponse est dépassé.");
+			} catch (IOException ignored) {}
+			return adresseServeur;
+    	}
 
 	/*
 	 * Pour demarrer le chat
@@ -172,15 +171,25 @@ public class Client  {
 	 * Si le nom d'utilisateur n'est pas spécifié, "Anonymous" est utilisé
 	 */
 	public static void main(String[] args) throws NoSuchPaddingException, NoSuchAlgorithmException {
+		String serverAddress="";
 		// valeurs par défaut si pas d'arguments
 		int portNumber = 1500;
-		String serverAddress = ping();
-		//String serverAddress="192.168.1.166";
-		String userName = "Anonymous";
+		String resPing=ping();
+		if(resPing.equals("")){
+			System.out.println("Pour l'instant ya r");
+			//TODO mettre le pop up de rentrer l'ip manuellement
+		}
+		else{
+			serverAddress=resPing;
+		}
 		Scanner scan = new Scanner(System.in);
 
 		System.out.println("Enter the username: ");
-		userName = scan.nextLine();
+		String userName = scan.nextLine();
+		if(userName.equals("")){
+			Random r=new Random();
+			userName = "User"+ r.nextInt(1000,8000);
+		}
 
 		// instanciation du client avec les valeurs par défaut ou celles spécifiées
 		Client client = new Client(serverAddress, portNumber, userName);
