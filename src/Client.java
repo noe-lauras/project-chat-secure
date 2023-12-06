@@ -15,6 +15,7 @@ import java.util.Scanner;
 // La classe Client qui peut être exécutée en mode console
 public class Client  {
 
+	private ListenFromServer listenThread; 		// pour ecouter le serveur
 	private MessageListener messageListener; // pour afficher les messages
 	private ObjectInputStream sInput;		// pour lire du socket
 	private ObjectOutputStream sOutput;		// pour ecrire sur le socket
@@ -108,8 +109,11 @@ public class Client  {
 			return false;
 		}
 
-		// création du thread pour écouter le serveur
-		new ListenFromServer().start();
+		// création du thread pour écouter le serveur, on le stocke pour pouvoir l'arrêter plus tard
+
+		listenThread = new ListenFromServer();
+		listenThread.start();
+
 		// Envoi du nom d'utilisateur au serveur en tant que String. Tous les autres messages seront des objets ChatMessage et non des Strings.
 		try
 		{
@@ -124,10 +128,7 @@ public class Client  {
 		return true;
 	}
 
-
-	/*
-	 * Pour afficher un message
-	 */
+	// afficher un message dans la console
 	private void display(String msg) {
 		System.out.println(msg);
 	}
@@ -162,6 +163,10 @@ public class Client  {
 		catch(Exception ignored) {}
 		try{
 			if(socket != null) socket.close();
+		}
+		catch(Exception ignored) {}
+		try{
+			if(listenThread != null) listenThread.interrupt();
 		}
 		catch(Exception ignored) {}
 

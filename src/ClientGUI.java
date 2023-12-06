@@ -1,6 +1,8 @@
 import javax.crypto.NoSuchPaddingException;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.security.NoSuchAlgorithmException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -40,6 +42,15 @@ public class ClientGUI extends JFrame implements MessageListener {
             }
         });
 
+        messageField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    sendMessage();
+                }
+            }
+        });
+
 
         // Organisation des composants dans la fenêtre
         setLayout(new BorderLayout());
@@ -51,6 +62,7 @@ public class ClientGUI extends JFrame implements MessageListener {
 
         // création du client
         client = new Client(server, port, username);
+
 
         if (!client.start()) {
             // si le client n'a pas pu se connecter
@@ -99,6 +111,8 @@ public class ClientGUI extends JFrame implements MessageListener {
     public void appendMessage(String message) {
         // Ajouter le message à la zone de chat
         chatArea.append(message + "\n");
+        // on fait défiler la zone de chat pour voir le nouveau message
+        chatArea.setCaretPosition(chatArea.getDocument().getLength());
     }
 
     public String getMessage() {

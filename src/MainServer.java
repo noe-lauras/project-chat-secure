@@ -9,6 +9,7 @@ public class MainServer {
 
             // on crée le serveur
             Server server = new Server(port);
+
             // on le démarre
             server.start();
 

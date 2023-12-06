@@ -285,7 +285,7 @@ public class Server {
 					cm = (Message) sInput.readObject();
 				}
 				catch (IOException e) {
-					display(username + " Exception reading Streams: " + e);
+					//display(username + " Exception reading Streams: " + e);
 					break;
 				}
 				catch(ClassNotFoundException e2) {
