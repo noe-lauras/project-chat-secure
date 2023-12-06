@@ -4,8 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2c6ef701-35b2-4578-a5b7-99d90fab3bee" name="Changes" comment="Les échanges sont sécurisés au max ^^ (pas au max mais bon ça fonctionne quoi)">
-      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" />
+    <list default="true" id="2c6ef701-35b2-4578-a5b7-99d90fab3bee" name="Changes" comment="Ping pong entre le client et le serveur (pour l'instant dans des classes séparées) pour savoir l'IP du serveur. Pour se faire, le client ping tout le réseau (broadcast) et la personne qui lui répond bah c'est forcement le serveur (tu verras sur le code que ça ne peut être que lui).&#10;J'ai laissé les prints en commentaire au cas où tu veuilles tester ^^">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Client.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Server.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -20,6 +22,11 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="7ab96acf2fd4a8e343ae67528cd7fb233397590b" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="MarkdownSettingsMigration">
@@ -80,6 +87,7 @@
       <workItem from="1701197833931" duration="1323000" />
       <workItem from="1701682210353" duration="5535000" />
       <workItem from="1701797664824" duration="1339000" />
+      <workItem from="1701852204302" duration="2398000" />
     </task>
     <task id="LOCAL-00001" summary="first commit">
       <created>1699870033476</created>
