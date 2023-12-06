@@ -308,7 +308,7 @@ public class Server {
 					}
 					// bye pour se déconnecter
 					case Message.bye -> {
-						display(username + " disconnected with a LOGOUT message.");
+						display(username + " disconnected with a bye message.");
 						keepGoing = false;
 					}
 					// USERS pour la liste des utilisateurs connectés
