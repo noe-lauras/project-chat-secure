@@ -174,7 +174,8 @@ public class Client  {
 	public static void main(String[] args) throws NoSuchPaddingException, NoSuchAlgorithmException {
 		// valeurs par défaut si pas d'arguments
 		int portNumber = 1500;
-		String serverAddress = ping();
+		//String serverAddress = ping();
+		String serverAddress="192.168.1.166";
 		String userName = "Anonymous";
 		Scanner scan = new Scanner(System.in);
 
