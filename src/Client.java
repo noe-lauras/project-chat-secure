@@ -5,6 +5,8 @@ import java.io.ObjectOutputStream;
 import java.net.*;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
@@ -20,8 +22,9 @@ public class Client  {
 	private Socket socket;// socket object
 	private String serverAddress="";// Adresse du serveur
 	private final String username;// username
+	//TODO Enlever tout ce qui concerne l'AES
 	private final AES aes; // clé de cryptage AES
-
+	private final DHKey dhKey;
 	/*
 	 * Constructeur appelé par la console
 	 * username: le nom d'utilisateur
@@ -30,6 +33,7 @@ public class Client  {
 	Client(String username) throws NoSuchPaddingException, NoSuchAlgorithmException {
 		this.username = username;
 		this.aes=new AES();
+		this.dhKey=new DHKey();
 		//La méthode ping gère l'ip donc on n'a pas besoin de la préciser
 		//Le port est toujours 1500
 		String resPing=ping();
@@ -41,41 +45,41 @@ public class Client  {
 			this.serverAddress=resPing;
 		}
 	}
-		//Fonction qui permet de récupérer directement l'IP du serveur sans la taper en dur
-	    public static String ping(){
-			int receivePort = DEFAULT_PORT+1 ; // Port pour recevoir les réponses
-			String adresseServeur="";
-			// Message à envoyer
-			String message = "Serveur je te parle";
+	//Fonction qui permet de récupérer directement l'IP du serveur sans la taper en dur
+	public static String ping(){
+		int receivePort = DEFAULT_PORT+1 ; // Port pour recevoir les réponses
+		String adresseServeur="";
+		// Message à envoyer
+		String message = "Serveur je te parle";
 
-			DatagramSocket socketReception;
-			try {
-				socketReception = new DatagramSocket(receivePort);
-				// Défini un timeout de 5 secondes pour sortir si on attend trop
-				socketReception.setSoTimeout(5000);
-				DatagramSocket socketEnvoi = new DatagramSocket();
-				byte[] messageBytes = message.getBytes();
-				InetAddress broadcastAddress = InetAddress.getByName("255.255.255.255");
-				DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, broadcastAddress, DEFAULT_PORT);
-				socketEnvoi.send(packet);
-				socketEnvoi.close();
-				byte[] receiveData = new byte[1024];
-				DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-				socketReception.receive(receivePacket);
+		DatagramSocket socketReception;
+		try {
+			socketReception = new DatagramSocket(receivePort);
+			// Défini un timeout de 5 secondes pour sortir si on attend trop
+			socketReception.setSoTimeout(5000);
+			DatagramSocket socketEnvoi = new DatagramSocket();
+			byte[] messageBytes = message.getBytes();
+			InetAddress broadcastAddress = InetAddress.getByName("255.255.255.255");
+			DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, broadcastAddress, DEFAULT_PORT);
+			socketEnvoi.send(packet);
+			socketEnvoi.close();
+			byte[] receiveData = new byte[1024];
+			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+			socketReception.receive(receivePacket);
 
-				InetAddress clientAddress = receivePacket.getAddress();
-				String message2 = new String(receivePacket.getData(), 0, receivePacket.getLength());
-				if(message2.equals("Client je te réponds")){
-					 System.out.println(message2);
-					 adresseServeur=clientAddress.getHostAddress();
-					System.out.println(adresseServeur);
-					socketReception.close();
-				}
-			} catch (SocketTimeoutException e) {
+			InetAddress clientAddress = receivePacket.getAddress();
+			String message2 = new String(receivePacket.getData(), 0, receivePacket.getLength());
+			if(message2.equals("Client je te réponds")){
+				System.out.println(message2);
+				adresseServeur=clientAddress.getHostAddress();
+				System.out.println(adresseServeur);
+				socketReception.close();
+			}
+		} catch (SocketTimeoutException e) {
 			System.out.println("Erreur: Le délai d'attente pour la réponse est dépassé.");
-			} catch (IOException ignored) {}
-			return adresseServeur;
-    	}
+		} catch (IOException ignored) {}
+		return adresseServeur;
+	}
 
 	//Pour démarrer le chat
 	public boolean start() {
