@@ -13,6 +13,7 @@ import java.util.Scanner;
 // La classe Client qui peut être exécutée en mode console
 public class Client  {
 
+	private static final int DEFAULT_PORT = 1500;
 	private ObjectInputStream sInput;		// pour lire du socket
 	private ObjectOutputStream sOutput;		// pour ecrire sur le socket
 	private Socket socket;					// socket object
@@ -36,8 +37,7 @@ public class Client  {
 	}
 		//Fonction qui permet de récupérer directement l'IP du serveur sans la taper en dur
 	    public static String ping(){
-			int sendPort = 1500; // Port pour envoyer le message
-			int receivePort = 1501; // Port pour recevoir les réponses
+			int receivePort = DEFAULT_PORT+1 ; // Port pour recevoir les réponses
 			String adresseServeur="";
 			// Message à envoyer
 			String message = "Serveur je te parle";
@@ -52,7 +52,7 @@ public class Client  {
 				DatagramSocket socketEnvoi = new DatagramSocket();
 				byte[] messageBytes = message.getBytes();
 				InetAddress broadcastAddress = InetAddress.getByName("255.255.255.255");
-				DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, broadcastAddress, sendPort);
+				DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, broadcastAddress, DEFAULT_PORT);
 				socketEnvoi.send(packet);
 				socketEnvoi.close();
 				//System.out.println("Message envoyé avec succès !");
@@ -165,15 +165,9 @@ public class Client  {
 
 	}
 
-	/*
-	 * Si le portNumber n'est pas spécifié, 1500 est utilisé
-	 * Si le serverAddress n'est pas spécifié, "localHost" est utilisé
-	 * Si le nom d'utilisateur n'est pas spécifié, "Anonymous" est utilisé
-	 */
 	public static void main(String[] args) throws NoSuchPaddingException, NoSuchAlgorithmException {
 		String serverAddress="";
 		// valeurs par défaut si pas d'arguments
-		int portNumber = 1500;
 		String resPing=ping();
 		if(resPing.equals("")){
 			System.out.println("Pour l'instant ya r");
@@ -192,7 +186,7 @@ public class Client  {
 		}
 
 		// instanciation du client avec les valeurs par défaut ou celles spécifiées
-		Client client = new Client(serverAddress, portNumber, userName);
+		Client client = new Client(serverAddress,DEFAULT_PORT, userName);
 		// test de la connexion au serveur, si echec, on quitte avec un return
 		if(!client.start())
 			return ;
