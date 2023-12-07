@@ -201,12 +201,12 @@ public class Server {
 			message=w[0]+w[2];
 			String messageLf = time + " " + message + "\n";
 			boolean found=false;
-			// on itère sur la liste des clients connectés, pour trouver le client concerné
+			// on itère sur la liste des clients connectés, pour trouver le client concerné et le client qui envoie le message
 			for(int y=al.size(); --y>=0;)
 			{
 				ClientThread ct1=al.get(y);
 				String check=ct1.getUsername();
-				if(check.equals(tocheck))
+				if(check.equals(tocheck) || check.equals(user))
 				{
 					// on essaye d'envoyer le message au client, si ça ne marche pas on le supprime de la liste
                     // --> ça veut dire qu'il n'est plus connecté
@@ -214,9 +214,7 @@ public class Server {
 						al.remove(y);
 						display("Disconnected Client " + ct1.username + " removed from list.");
 					}
-					// on a trouvé le client, on sort de la boucle
 					found=true;
-					break;
 				}	
 			}
 			// le client n'existe pas
