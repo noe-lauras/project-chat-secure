@@ -11,10 +11,11 @@ public class DHKey {
     private byte[] secretKey;
     private String secretMessage;
 
-    public void generateKeys() {
+    //Génère une clé publique et privée de longueur 2048
+    public void DHKey() {
         try {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("DH");
-            keyPairGenerator.initialize(2048); //<-- Règlementation de sécurité
+            keyPairGenerator.initialize(2048); //<-- Règle de sécurité pour la taille de la clé
 
             KeyPair keyPair = keyPairGenerator.generateKeyPair();
 

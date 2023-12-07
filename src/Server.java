@@ -8,7 +8,8 @@ import java.util.*;
 
 public class Server {
 	///Attribut de la classe Server
-	AES aes = new AES();
+	private final AES aes = new AES();
+	private final DHKey dhKey;
 
 	// unique id pour chaque client, plus facile pour la déconnexion
 	private int uniqueId;
@@ -34,6 +35,8 @@ public class Server {
 
 	//le constructeur ne reçoit que le port à écouter pour la connection en paramètre
 	public Server() throws NoSuchPaddingException, NoSuchAlgorithmException {
+		//Génération du couple clé publique/privée
+		dhKey=new DHKey();
 		// format pour la date 
 		sdf = new SimpleDateFormat("HH:mm:ss");
 		// ArrayList pour la liste des clients connectés
@@ -282,6 +285,7 @@ public class Server {
 					}
 				}
 				sendAESKey();
+				sendDHKey();
 			}
 			catch (IOException e) {
 				display("Exception creating new Input/output Streams: " + e);
@@ -300,6 +304,15 @@ public class Server {
             e.printStackTrace();
         }
     }
+	    private void sendDHKey() {
+		try {
+			System.out.println(Arrays.toString(dhKey.getPublicKey().getEncoded()));
+			sOutput.writeObject(dhKey.getPublicKey()); // Envoie la clé DH au client
+		} catch(IOException e) {
+			display("Error sending DH key to " + username);
+			e.printStackTrace();
+		}
+	}
 
 		
 		public String getUsername() {

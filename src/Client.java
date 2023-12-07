@@ -5,6 +5,8 @@ import java.io.ObjectOutputStream;
 import java.net.*;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
@@ -20,8 +22,9 @@ public class Client  {
 	private Socket socket;// socket object
 	private String serverAddress="";// Adresse du serveur
 	private final String username;// username
+	//TODO Enlever tout ce qui concerne l'AES
 	private final AES aes; // clé de cryptage AES
-
+	private final DHKey dhKey;
 	/*
 	 * Constructeur appelé par la console
 	 * username: le nom d'utilisateur
@@ -30,6 +33,7 @@ public class Client  {
 	Client(String username) throws NoSuchPaddingException, NoSuchAlgorithmException {
 		this.username = username;
 		this.aes=new AES();
+		this.dhKey=new DHKey();
 		//La méthode ping gère l'ip donc on n'a pas besoin de la préciser
 		//Le port est toujours 1500
 		String resPing=ping();
