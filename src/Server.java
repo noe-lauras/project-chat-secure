@@ -241,14 +241,6 @@ public class Server {
 		}
 		return true;
 	}
-	/*
-	 * Si le portNumber n'est pas spécifié, 1500 est utilisé
-	 */
-	public static void main(String[] args) throws NoSuchPaddingException, NoSuchAlgorithmException {
-		// creation du serveur avec le port spécifié et on le démarre
-		Server server = new Server();
-		server.start();
-	}
 
 	// un thread pour chaque client
 	class ClientThread extends Thread {

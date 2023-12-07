@@ -14,7 +14,7 @@ public class DHKey {
     public void generateKeys() {
         try {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("DH");
-            keyPairGenerator.initialize(1024);
+            keyPairGenerator.initialize(2048); //<-- Règlementation de sécurité
 
             KeyPair keyPair = keyPairGenerator.generateKeyPair();
 

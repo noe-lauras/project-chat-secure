@@ -12,32 +12,30 @@ import java.util.Scanner;
 
 // La classe Client qui peut être exécutée en mode console
 public class Client  {
-	private  ListenFromServer listenThread; 		// pour ecouter le serveur
+	private  ListenFromServer listenThread; // pour ecouter le serveur
 	private MessageListener messageListener; // pour afficher les messages
 	private static final int DEFAULT_PORT = 1500;
-	private ObjectInputStream sInput;		// pour lire du socket
-	private ObjectOutputStream sOutput;		// pour ecrire sur le socket
-	private Socket socket;					// socket object
-
-	private String serverAddress="";
-	private final String username;// server et username
-	private final AES aes; 				// clé de cryptage AES
+	private ObjectInputStream sInput;// pour lire le socket
+	private ObjectOutputStream sOutput;// pour écrire sur le socket
+	private Socket socket;// socket object
+	private String serverAddress="";// Adresse du serveur
+	private final String username;// username
+	private final AES aes; // clé de cryptage AES
 
 	/*
 	 * Constructeur appelé par la console
-	 * server: le serveur
-	 * port: le port
 	 * username: le nom d'utilisateur
 	 */
 
 	Client(String username) throws NoSuchPaddingException, NoSuchAlgorithmException {
 		this.username = username;
 		this.aes=new AES();
-		// valeurs par défaut si pas d'arguments
+		//La méthode ping gère l'ip donc on n'a pas besoin de la préciser
+		//Le port est toujours 1500
 		String resPing=ping();
 		if(resPing.equals("")){
 			System.out.println("Pour l'instant ya r");
-			//TODO mettre le pop up de rentrer l'ip manuellement
+			//TODO mettre le pop up pour rentrer l'ip manuellement
 		}
 		else{
 			this.serverAddress=resPing;
@@ -55,15 +53,12 @@ public class Client  {
 				socketReception = new DatagramSocket(receivePort);
 				// Défini un timeout de 5 secondes pour sortir si on attend trop
 				socketReception.setSoTimeout(5000);
-				//System.out.println("En attente de messages...");
-
 				DatagramSocket socketEnvoi = new DatagramSocket();
 				byte[] messageBytes = message.getBytes();
 				InetAddress broadcastAddress = InetAddress.getByName("255.255.255.255");
 				DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, broadcastAddress, DEFAULT_PORT);
 				socketEnvoi.send(packet);
 				socketEnvoi.close();
-				//System.out.println("Message envoyé avec succès !");
 				byte[] receiveData = new byte[1024];
 				DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 				socketReception.receive(receivePacket);
@@ -82,9 +77,7 @@ public class Client  {
 			return adresseServeur;
     	}
 
-	/*
-	 * Pour demarrer le chat
-	 */
+	//Pour démarrer le chat
 	public boolean start() {
 		// essaie de se connecter au serveur
 		try {
@@ -159,17 +152,8 @@ public class Client  {
 	void disconnect() {
 		try {
 			if(sInput != null) sInput.close();
-		}
-		catch(Exception ignored) {}
-		try {
 			if(sOutput != null) sOutput.close();
-		}
-		catch(Exception ignored) {}
-		try{
 			if(socket != null) socket.close();
-		}
-		catch(Exception ignored) {}
-		try{
 			if(listenThread != null) listenThread.interrupt();
 		}
 		catch(Exception ignored) {}
@@ -177,55 +161,6 @@ public class Client  {
 
 	public void setMessageListener(MessageListener listener) {
 		this.messageListener = listener;
-	}
-
-	public static void main(String[] args) throws NoSuchPaddingException, NoSuchAlgorithmException {
-		Scanner scan = new Scanner(System.in);
-
-		System.out.println("Enter the username: ");
-		String userName = scan.nextLine();
-		if(userName.equals("")){
-			Random r=new Random();
-			userName = "User"+ r.nextInt(1000,8000);
-		}
-
-		// instanciation du client avec les valeurs par défaut ou celles spécifiées
-		Client client = new Client(userName);
-		// test de la connexion au serveur, si echec, on quitte avec un return
-		if(!client.start())
-			return ;
-
-		// si la connexion est ok, on affiche les instructions
-		System.out.println("\nHello! Bienvenue sur l'espace de chat.");
-		System.out.println("Instructions:");
-		System.out.println("1. Tapez simplement un message pour l'envoyer à tous les utilisateurs connectés");
-		System.out.println("2. Tapez @username votre_message pour envoyer un message privé à un utilisateur spécifique");
-		System.out.println("Attention à bien respecter l'espace entre le nom d'utilisateur et le message.");
-		System.out.println("3. Tapez USERS pour voir la liste des utilisateurs connectés");
-		System.out.println("4. Tapez bye pour déconnecter du serveur");
-		// boucle infinie pour lire le message de l'utilisateur et l'envoyer au serveur
-		while(true) {
-			System.out.print("> ");
-			// lire le message de l'utilisateur
-			String msg = scan.nextLine();
-			//  message pour quitter le chatroom
-			if(msg.equalsIgnoreCase("bye")) {
-				client.sendMessage(new Message(Message.bye, ""));
-				break;
-			}
-			// message pour voir la liste des utilisateurs connectés
-			else if(msg.equalsIgnoreCase("USERS")) {
-				client.sendMessage(new Message(Message.USERS, ""));
-			}
-			// message normal
-			else {
-				client.sendMessage(new Message(Message.MESSAGE, msg));
-			}
-		}
-		// fermeture du scanner (lecture de l'entrée standard)
-		scan.close();
-		// deconnexion du client
-		client.disconnect();
 	}
 
 	/*
@@ -238,8 +173,7 @@ public class Client  {
 					// lecture du message du serveur provenant du socket (sInput)
 					Object recu = sInput.readObject();
 					// Là, je teste si recu est un String (un message normal) ou un Byte[] (la clé)
-					if (recu instanceof String) {
-						String message = (String) recu;
+					if (recu instanceof String message) {
 						System.out.println(message);
 
 						// Appeler le callback pour informer l'interface graphique

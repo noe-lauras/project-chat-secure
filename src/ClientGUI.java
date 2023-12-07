@@ -135,10 +135,4 @@ public class ClientGUI extends JFrame implements MessageListener {
             appendMessage(message);
         });
     }
-
-    public interface MessageListener {
-        void onMessageReceived(String message);
-    }
-
-
 }
