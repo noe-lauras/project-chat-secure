@@ -80,6 +80,31 @@ public class ClientGUI extends JFrame implements MessageListener {
         appendMessage("4. Tapez bye pour déconnecter du serveur\n");
         appendMessage("------------------------------------\n");
 
+        // Couleurs Discord-inspired
+        Color discordBackground = new Color(54, 57, 63); // Fond sombre
+        Color discordText = new Color(255, 255, 255); // Texte blanc
+        Color discordGreen = new Color(0, 255, 0); // Couleur de texte pour les messages du serveur
+        Color discordGray = new Color(169, 184, 204); // Couleur de texte pour les messages du client
+
+        // Appliquer les couleurs
+        getContentPane().setBackground(discordBackground);
+        chatArea.setBackground(discordBackground);
+        chatArea.setForeground(discordText);
+        chatArea.setCaretColor(discordText);
+        chatArea.setSelectionColor(discordGray);
+
+        messageField.setBackground(discordBackground);
+        messageField.setForeground(discordText);
+        messageField.setCaretColor(discordText);
+        messageField.setBorder(BorderFactory.createLineBorder(discordGray));
+
+        sendButton.setBackground(discordBackground);
+        sendButton.setForeground(discordText);
+        sendButton.setBorder(BorderFactory.createLineBorder(discordGray));
+
+        bottomPanel.setBackground(discordBackground);
+
+
         setVisible(true);
 
     }
