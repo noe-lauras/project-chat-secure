@@ -1,17 +1,19 @@
 import javax.crypto.NoSuchPaddingException;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.security.NoSuchAlgorithmException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 
 public class ClientGUI extends JFrame implements MessageListener {
-    private Client client;
+    private final Client client;
     private final JTextField messageField;
     private final JTextArea chatArea;
 
-    public ClientGUI(int port, String server, String username) throws NoSuchPaddingException, NoSuchAlgorithmException {
+    public ClientGUI(String username) throws NoSuchPaddingException, NoSuchAlgorithmException {
 
         // Initialisation de la fenêtre
         setTitle("Secure Chat Client");
@@ -32,11 +34,17 @@ public class ClientGUI extends JFrame implements MessageListener {
 
         JButton sendButton = new JButton("Send");
 
-        sendButton.addActionListener(new ActionListener() {
+        sendButton.addActionListener(e -> {
+            // Action à effectuer lorsqu'on clique sur le bouton "Send"
+            sendMessage();
+        });
+
+        messageField.addKeyListener(new KeyAdapter() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                // Action à effectuer lorsqu'on clique sur le bouton "Send"
-                sendMessage();
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    sendMessage();
+                }
             }
         });
 
@@ -50,7 +58,8 @@ public class ClientGUI extends JFrame implements MessageListener {
         add(bottomPanel, BorderLayout.SOUTH);
 
         // création du client
-        client = new Client(server, port, username);
+        client = new Client(username);
+
 
         if (!client.start()) {
             // si le client n'a pas pu se connecter
@@ -99,6 +108,8 @@ public class ClientGUI extends JFrame implements MessageListener {
     public void appendMessage(String message) {
         // Ajouter le message à la zone de chat
         chatArea.append(message + "\n");
+        // on fait défiler la zone de chat pour voir le nouveau message
+        chatArea.setCaretPosition(chatArea.getDocument().getLength());
     }
 
     public String getMessage() {
@@ -124,10 +135,4 @@ public class ClientGUI extends JFrame implements MessageListener {
             appendMessage(message);
         });
     }
-
-    public interface MessageListener {
-        void onMessageReceived(String message);
-    }
-
-
 }

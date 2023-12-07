@@ -2,46 +2,86 @@ import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.Socket;
+import java.net.*;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Random;
 import java.util.Scanner;
 
 
 // La classe Client qui peut être exécutée en mode console
 public class Client  {
-
-	private MessageListener messageListener;
-	private ObjectInputStream sInput;		// pour lire du socket
-	private ObjectOutputStream sOutput;		// pour ecrire sur le socket
-	private Socket socket;					// socket object
-
-	private final String server,username;// server et username
-	private final int port;					// port
-	private final AES aes; 				// clé de cryptage AES
+	private  ListenFromServer listenThread; // pour ecouter le serveur
+	private MessageListener messageListener; // pour afficher les messages
+	private static final int DEFAULT_PORT = 1500;
+	private ObjectInputStream sInput;// pour lire le socket
+	private ObjectOutputStream sOutput;// pour écrire sur le socket
+	private Socket socket;// socket object
+	private String serverAddress="";// Adresse du serveur
+	private final String username;// username
+	private final AES aes; // clé de cryptage AES
 
 	/*
-	 * Constructeur appelé par ClientGUI
-	 * server: le serveur
-	 * port: le port
+	 * Constructeur appelé par la console
 	 * username: le nom d'utilisateur
 	 */
 
-	Client(String server, int port, String username) throws NoSuchPaddingException, NoSuchAlgorithmException {
-		this.server = server;
-		this.port = port;
+	Client(String username) throws NoSuchPaddingException, NoSuchAlgorithmException {
 		this.username = username;
 		this.aes=new AES();
+		//La méthode ping gère l'ip donc on n'a pas besoin de la préciser
+		//Le port est toujours 1500
+		String resPing=ping();
+		if(resPing.equals("")){
+			System.out.println("Pour l'instant ya r");
+			//TODO mettre le pop up pour rentrer l'ip manuellement
+		}
+		else{
+			this.serverAddress=resPing;
+		}
 	}
+		//Fonction qui permet de récupérer directement l'IP du serveur sans la taper en dur
+	    public static String ping(){
+			int receivePort = DEFAULT_PORT+1 ; // Port pour recevoir les réponses
+			String adresseServeur="";
+			// Message à envoyer
+			String message = "Serveur je te parle";
 
-	/*
-	 * Pour demarrer le chat
-	 */
+			DatagramSocket socketReception;
+			try {
+				socketReception = new DatagramSocket(receivePort);
+				// Défini un timeout de 5 secondes pour sortir si on attend trop
+				socketReception.setSoTimeout(5000);
+				DatagramSocket socketEnvoi = new DatagramSocket();
+				byte[] messageBytes = message.getBytes();
+				InetAddress broadcastAddress = InetAddress.getByName("255.255.255.255");
+				DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, broadcastAddress, DEFAULT_PORT);
+				socketEnvoi.send(packet);
+				socketEnvoi.close();
+				byte[] receiveData = new byte[1024];
+				DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+				socketReception.receive(receivePacket);
+
+				InetAddress clientAddress = receivePacket.getAddress();
+				String message2 = new String(receivePacket.getData(), 0, receivePacket.getLength());
+				if(message2.equals("Client je te réponds")){
+					 System.out.println(message2);
+					 adresseServeur=clientAddress.getHostAddress();
+					System.out.println(adresseServeur);
+					socketReception.close();
+				}
+			} catch (SocketTimeoutException e) {
+			System.out.println("Erreur: Le délai d'attente pour la réponse est dépassé.");
+			} catch (IOException ignored) {}
+			return adresseServeur;
+    	}
+
+	//Pour démarrer le chat
 	public boolean start() {
 		// essaie de se connecter au serveur
 		try {
-			socket = new Socket(server, port);
+			socket = new Socket(serverAddress,DEFAULT_PORT);
 		}
 		// exception si echec
 		catch(Exception ec) {
@@ -67,8 +107,10 @@ public class Client  {
 			return false;
 		}
 
-		// création du thread pour écouter le serveur
-		new ListenFromServer().start();
+		// création du thread pour écouter le serveur, on le stocke pour pouvoir l'arrêter plus tard
+
+		listenThread = new ListenFromServer();
+		listenThread.start();
 		// Envoi du nom d'utilisateur au serveur en tant que String. Tous les autres messages seront des objets ChatMessage et non des Strings.
 		try
 		{
@@ -83,10 +125,7 @@ public class Client  {
 		return true;
 	}
 
-
-	/*
-	 * Pour afficher un message
-	 */
+	// afficher un message dans la console
 	private void display(String msg) {
 		System.out.println(msg);
 	}
@@ -94,7 +133,7 @@ public class Client  {
 	/*
 	 * Pour envoyer un message au serveur
 	 */
-	 void sendMessage(Message msg) {
+	void sendMessage(Message msg) {
 		try {
 			System.out.println(msg.getMessage());
 			// on encrypte le message
@@ -113,24 +152,12 @@ public class Client  {
 	void disconnect() {
 		try {
 			if(sInput != null) sInput.close();
-		}
-		catch(Exception ignored) {}
-		try {
 			if(sOutput != null) sOutput.close();
-		}
-		catch(Exception ignored) {}
-		try{
 			if(socket != null) socket.close();
+			if(listenThread != null) listenThread.interrupt();
 		}
 		catch(Exception ignored) {}
-
 	}
-
-	/*
-	 * Si le portNumber n'est pas spécifié, 1500 est utilisé
-	 * Si le serverAddress n'est pas spécifié, "localHost" est utilisé
-	 * Si le nom d'utilisateur n'est pas spécifié, "Anonymous" est utilisé
-	 */
 
 	public void setMessageListener(MessageListener listener) {
 		this.messageListener = listener;
@@ -146,8 +173,7 @@ public class Client  {
 					// lecture du message du serveur provenant du socket (sInput)
 					Object recu = sInput.readObject();
 					// Là, je teste si recu est un String (un message normal) ou un Byte[] (la clé)
-					if (recu instanceof String) {
-						String message = (String) recu;
+					if (recu instanceof String message) {
 						System.out.println(message);
 
 						// Appeler le callback pour informer l'interface graphique

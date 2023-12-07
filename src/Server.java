@@ -7,49 +7,96 @@ import java.util.*;
 
 
 public class Server {
+	///Attribut de la classe Server
 	AES aes = new AES();
 
 	// unique id pour chaque client, plus facile pour la déconnexion
-	private static int uniqueId;
+	private int uniqueId;
 	// ArrayList pour la liste des clients connectés
 	private final ArrayList<ClientThread> al;
 	// affichage de l'heure et de la date
 	private final SimpleDateFormat sdf;
+
+	//Pour pouvoir fermer le thread d'écoute depuis la fonction turn_off
+	DatagramSocket udpSocket;
+	//Pour forcer la fermeture du serveur
+	ServerSocket serverSocket;
 	//  port de connection
-	private final int port;
+	private final int DEFAULT_PORT=1500;
 	// boolean pour savoir si le serveur est actif
-	private boolean estActif;
+	private volatile boolean estActif=true;
+	//Pour que chaque thread voie la dernière valeur écrite, on met la variable en volatile
+	//Comme en arduino
+	private volatile boolean keepGoing=true;
 	// notification
 	private final String notif = " *** ";
-	
+	///
+
 	//le constructeur ne reçoit que le port à écouter pour la connection en paramètre
-	
-	public Server(int port) throws NoSuchPaddingException, NoSuchAlgorithmException {
-		// port
-		this.port = port;
+	public Server() throws NoSuchPaddingException, NoSuchAlgorithmException {
 		// format pour la date 
 		sdf = new SimpleDateFormat("HH:mm:ss");
 		// ArrayList pour la liste des clients connectés
 		al = new ArrayList<>();
 	}
-	
+	//Fonction qui attend qu'un client ping
+	public void pong(){
+        int receivePort = 1500; // Port pour recevoir les messages
+        int sendPort = 1501; // Port pour envoyer les réponses
+
+        try {
+			udpSocket = new DatagramSocket(receivePort);
+            //System.out.println("En attente de messages...");
+            while (keepGoing) {
+				//System.out.println("En attente de recevoir un paquet. keepGoing = " + keepGoing);
+				if (udpSocket.isClosed()) {
+					System.out.println("La socket UDP est fermée.");
+				}
+				//Pour recevoir le message envoyé par le ping de Client
+                byte[] receiveData = new byte[1024];
+                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                udpSocket.receive(receivePacket);
+                InetAddress clientAddress = receivePacket.getAddress();
+                String message = new String(receivePacket.getData(), 0, receivePacket.getLength());
+				//
+
+                if (message.equals("Serveur je te parle")) {
+                    DatagramSocket responseSocket = new DatagramSocket();
+                    String responseMessage = "Client je te réponds";
+                    byte[] sendData = responseMessage.getBytes();
+					//On récupère l'ip du destinataire pour lui renvoyer un message
+                    InetAddress destinationAddress = InetAddress.getByName(clientAddress.getHostAddress());
+					//Message que l'on renvoie
+                    DatagramPacket responsePacket = new DatagramPacket(sendData, sendData.length, destinationAddress, sendPort);
+                    responseSocket.send(responsePacket);
+                    responseSocket.close();
+                    //System.out.println("Message envoyé avec succès !");
+                }
+            }
+			//System.out.println("YA PU PERSONNE");
+
+			//On ferme la socket (normalement, c'est déjà geré ailleurs mais par précaution...)
+			udpSocket.close();
+        } catch (IOException ignored) {
+        }
+    }
 	public void start() {
-		estActif = true;
+		// Démarre le thread pour écouter les requêtes UDP
+    	new Thread(this::pong).start();
 		//creation du socket serveur et ecoute sur le port
 		try 
 		{
 			// le socket serveur 
-			ServerSocket serverSocket = new ServerSocket(port);
+			serverSocket = new ServerSocket(DEFAULT_PORT);
 
 			// boucle infinie pour attendre les connexions des clients
+			//System.out.println("avant boucle: "+estActif);
 			while(estActif) 
 			{
-				display("Server waiting for Clients on port " + port + ".");
+				//System.out.println("dans boucle : "+estActif);
+				display("Server waiting for Clients on port " + DEFAULT_PORT + ".");
 				// accepte la connection si le client est connecté
 				Socket socket = serverSocket.accept();
-				// on casse la boucle si le serveur n'est plus actif 
-				if(!estActif)
-					break;
 				// creation d'un thread pour le client
 				ClientThread t = new ClientThread(socket);
 				// ajout du client à la liste des clients
@@ -57,6 +104,7 @@ public class Server {
 				// on démarre le thread
 				t.start();
 			}
+			//System.out.println("LE SERV N'EST PLUS ACTIF");
 			// si on n'est plus actif on ferme le serveur
 			try {
 				serverSocket.close();
@@ -81,9 +129,44 @@ public class Server {
 	}
 
 	// pour stopper le serveur
-	protected void stop() {
+	protected void turn_off() {
         // on change le boolean pour ne plus être actif
+		//System.out.println("BAH JE SUIS LA NON????");
 		estActif = false;
+		keepGoing= false;
+		try{
+		if (serverSocket != null && !serverSocket.isClosed()) serverSocket.close();
+		}catch(IOException e){e.printStackTrace();}
+		 // Ferme la socket, ce qui devrait interrompre socket.receive()
+		if (udpSocket != null && !udpSocket.isClosed()) udpSocket.close();
+		for (ClientThread ct:al) {
+			ct.stopClientThread();
+		}
+	}
+
+
+	// pour supprimer un client de la liste des clients connectés (s'il se déconnecte avec un bye)
+	synchronized void remove(int id) {
+		//System.out.println("JE ME DECONNECTE");
+		String disconnectedClient = "";
+		// on itère sur la liste des clients connectés, pour trouver le client concerné
+		for(int i = 0; i < al.size(); ++i) {
+			ClientThread ct = al.get(i);
+			// si on le trouve, on le supprime de la liste
+			if(ct.id == id) {
+				disconnectedClient = ct.getUsername();
+				al.remove(i);
+				ct.stopClientThread();
+				break;
+			}
+		}
+	broadcast(notif + " %s has left the chat room." + notif,disconnectedClient);
+	 // Vérifie si la liste des clients est vide
+	//System.out.println("Avant la boucle qui teste vide ou pas");
+	if (al.isEmpty()) {
+		//System.out.println("C'est vide donc je stoppe");
+		turn_off(); // On arrête le serveur si aucun client n'est connecté
+		}
 	}
 
 	// Affichage (display) de n'importe quel event dans la console
@@ -149,7 +232,7 @@ public class Server {
 			for(int i = al.size(); --i >= 0;) {
 				ClientThread ct = al.get(i);
 				// on essaye d'envoyer le message au client, si ça ne marche pas on le supprime de la liste
-                // --> ça veut dire qu'il n'est plus connecté
+                // → ça veut dire qu'il n'est plus connecté
 				if(!ct.writeMsg(messageLf)) {
 					al.remove(i);
 					display("Disconnected Client " + ct.username + " removed from list.");
@@ -158,24 +241,6 @@ public class Server {
 		}
 		return true;
 	}
-
-	// pour supprimer un client de la liste des clients connectés (s'il se déconnecte avec un bye)
-	synchronized void remove(int id) {
-		String disconnectedClient = "";
-		// on itère sur la liste des clients connectés, pour trouver le client concerné
-		for(int i = 0; i < al.size(); ++i) {
-			ClientThread ct = al.get(i);
-			// si on le trouve, on le supprime de la liste
-			if(ct.id == id) {
-				disconnectedClient = ct.getUsername();
-				al.remove(i);
-				break;
-			}
-		}
-		broadcast(notif + " %s has left the chat room." + notif,disconnectedClient);
-	}
-
-
 
 	// un thread pour chaque client
 	class ClientThread extends Thread {
@@ -244,7 +309,7 @@ public class Server {
 		// boucle infinie pour écouter les messages des clients
 		public void run() {
             // boucler jusqu'à ce que le client se déconnecte, (avec un bye)
-			boolean keepGoing = true;
+			keepGoing = true;
 			while(keepGoing) {
 				// lire le message envoyé par le client, on cast en Message car c'est un objet
 				try {
@@ -255,7 +320,7 @@ public class Server {
 					break;				
 				}
 				catch(ClassNotFoundException e2) {
-					break;
+					e2.printStackTrace();
 				}
 				// on récupère le message de l'objet Message
 				Object message = cm.getMessage();
@@ -290,29 +355,31 @@ public class Server {
 			}
 			// si on sort de la boucle, on déconnecte le client de la liste des clients connectés
 			remove(id);
-			close();
+			shut();
 		}
-		
-		private void close() {
+
+		private void shut() {
+			System.out.println("on ferme boutique");
 			try {
-				if(sOutput != null) sOutput.close();
-			}
-			catch(Exception ignored) {}
-			try {
-				if(sInput != null) sInput.close();
-			}
-			catch(Exception ignored) {};
-			try {
-				if(socket != null) socket.close();
-			}
-			catch (Exception ignored) {}
+				if (sOutput != null) sOutput.close();
+				if (sInput != null) sInput.close();
+				if (socket != null) {
+					System.out.println("normalement on arrive jusque là");
+					socket.close();
+				}
+			}catch (Exception ignored) {}
+		}
+
+		public void stopClientThread() {
+		keepGoing = false;
+		shut();
 		}
 
         // écrire un message dans le flux de sortie du client (sOutput, ObjectOutputStream)
 		private boolean writeMsg(String msg) {
 			// on check si le socket est connecté, si non on ferme le flux de sortie 
 			if(!socket.isConnected()) {
-				close();
+				shut();
 				return false;
 			}
 			// on écrit le message dans le flux de sortie
