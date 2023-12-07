@@ -4,9 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2c6ef701-35b2-4578-a5b7-99d90fab3bee" name="Changes" comment="Bon bah tout marche comme prévu,&#10;j'ai changé la façon de gérer les gens qui mettent pas de pseudo &#10;sinon, j'ai rajouté 2-3 commentaires + géré le cas où ping cherche dans le vide.&#10;Je vois pas d'autres améliorations autres que ça mis à part tout intégrer dans l'interface graphique. &#10;Voili voilou">
+    <list default="true" id="2c6ef701-35b2-4578-a5b7-99d90fab3bee" name="Changes" comment="AHHHHHHHHHHH">
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Client.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Server.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -175,7 +177,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="origin/GUI" />
+                        <option value="HEAD" />
                       </list>
                     </value>
                   </entry>
@@ -196,6 +198,7 @@
     <MESSAGE value="Ping pong entre le client et le serveur (pour l'instant dans des classes séparées) pour savoir l'IP du serveur. Pour se faire, le client ping tout le réseau (broadcast) et la personne qui lui répond bah c'est forcement le serveur (tu verras sur le code que ça ne peut être que lui).&#10;J'ai laissé les prints en commentaire au cas où tu veuilles tester ^^" />
     <MESSAGE value="Bon là ça marche niquel pour l'instant donc je push pour avoir une version stable si jamais ça merde" />
     <MESSAGE value="Bon bah tout marche comme prévu,&#10;j'ai changé la façon de gérer les gens qui mettent pas de pseudo &#10;sinon, j'ai rajouté 2-3 commentaires + géré le cas où ping cherche dans le vide.&#10;Je vois pas d'autres améliorations autres que ça mis à part tout intégrer dans l'interface graphique. &#10;Voili voilou" />
-    <option name="LAST_COMMIT_MESSAGE" value="Bon bah tout marche comme prévu,&#10;j'ai changé la façon de gérer les gens qui mettent pas de pseudo &#10;sinon, j'ai rajouté 2-3 commentaires + géré le cas où ping cherche dans le vide.&#10;Je vois pas d'autres améliorations autres que ça mis à part tout intégrer dans l'interface graphique. &#10;Voili voilou" />
+    <MESSAGE value="AHHHHHHHHHHH" />
+    <option name="LAST_COMMIT_MESSAGE" value="AHHHHHHHHHHH" />
   </component>
 </project>

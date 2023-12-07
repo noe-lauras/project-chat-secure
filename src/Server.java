@@ -22,7 +22,7 @@ public class Server {
 	//Pour forcer la fermeture du serveur
 	ServerSocket serverSocket;
 	//  port de connection
-	private final int port;
+	private final int DEFAULT_PORT=1500;
 	// boolean pour savoir si le serveur est actif
 	private volatile boolean estActif=true;
 	//Pour que chaque thread voie la dernière valeur écrite, on met la variable en volatile
@@ -33,9 +33,7 @@ public class Server {
 	///
 
 	//le constructeur ne reçoit que le port à écouter pour la connection en paramètre
-	public Server(int port) throws NoSuchPaddingException, NoSuchAlgorithmException {
-		// port
-		this.port = port;
+	public Server() throws NoSuchPaddingException, NoSuchAlgorithmException {
 		// format pour la date 
 		sdf = new SimpleDateFormat("HH:mm:ss");
 		// ArrayList pour la liste des clients connectés
@@ -89,14 +87,14 @@ public class Server {
 		try 
 		{
 			// le socket serveur 
-			serverSocket = new ServerSocket(port);
+			serverSocket = new ServerSocket(DEFAULT_PORT);
 
 			// boucle infinie pour attendre les connexions des clients
 			//System.out.println("avant boucle: "+estActif);
 			while(estActif) 
 			{
 				//System.out.println("dans boucle : "+estActif);
-				display("Server waiting for Clients on port " + port + ".");
+				display("Server waiting for Clients on port " + DEFAULT_PORT + ".");
 				// accepte la connection si le client est connecté
 				Socket socket = serverSocket.accept();
 				// creation d'un thread pour le client
@@ -247,9 +245,8 @@ public class Server {
 	 * Si le portNumber n'est pas spécifié, 1500 est utilisé
 	 */
 	public static void main(String[] args) throws NoSuchPaddingException, NoSuchAlgorithmException {
-		int portNumber = 1500;
 		// creation du serveur avec le port spécifié et on le démarre
-		Server server = new Server(portNumber);
+		Server server = new Server();
 		server.start();
 	}
 

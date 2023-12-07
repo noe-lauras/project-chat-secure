@@ -12,14 +12,15 @@ import java.util.Scanner;
 
 // La classe Client qui peut être exécutée en mode console
 public class Client  {
-
+	private  ListenFromServer listenThread; 		// pour ecouter le serveur
+	private MessageListener messageListener; // pour afficher les messages
 	private static final int DEFAULT_PORT = 1500;
 	private ObjectInputStream sInput;		// pour lire du socket
 	private ObjectOutputStream sOutput;		// pour ecrire sur le socket
 	private Socket socket;					// socket object
 
-	private final String server,username;// server et username
-	private final int port;					// port
+	private String serverAddress="";
+	private final String username;// server et username
 	private final AES aes; 				// clé de cryptage AES
 
 	/*
@@ -29,11 +30,18 @@ public class Client  {
 	 * username: le nom d'utilisateur
 	 */
 
-	Client(String server, int port, String username) throws NoSuchPaddingException, NoSuchAlgorithmException {
-		this.server = server;
-		this.port = port;
+	Client(String username) throws NoSuchPaddingException, NoSuchAlgorithmException {
 		this.username = username;
 		this.aes=new AES();
+		// valeurs par défaut si pas d'arguments
+		String resPing=ping();
+		if(resPing.equals("")){
+			System.out.println("Pour l'instant ya r");
+			//TODO mettre le pop up de rentrer l'ip manuellement
+		}
+		else{
+			this.serverAddress=resPing;
+		}
 	}
 		//Fonction qui permet de récupérer directement l'IP du serveur sans la taper en dur
 	    public static String ping(){
@@ -80,7 +88,7 @@ public class Client  {
 	public boolean start() {
 		// essaie de se connecter au serveur
 		try {
-			socket = new Socket(server, port);
+			socket = new Socket(serverAddress,DEFAULT_PORT);
 		}
 		// exception si echec
 		catch(Exception ec) {
@@ -106,8 +114,10 @@ public class Client  {
 			return false;
 		}
 
-		// création du thread pour écouter le serveur
-		new ListenFromServer().start();
+		// création du thread pour écouter le serveur, on le stocke pour pouvoir l'arrêter plus tard
+
+		listenThread = new ListenFromServer();
+		listenThread.start();
 		// Envoi du nom d'utilisateur au serveur en tant que String. Tous les autres messages seront des objets ChatMessage et non des Strings.
 		try
 		{
@@ -122,10 +132,7 @@ public class Client  {
 		return true;
 	}
 
-
-	/*
-	 * Pour afficher un message
-	 */
+	// afficher un message dans la console
 	private void display(String msg) {
 		System.out.println(msg);
 	}
@@ -133,7 +140,7 @@ public class Client  {
 	/*
 	 * Pour envoyer un message au serveur
 	 */
-	private void sendMessage(Message msg) {
+	void sendMessage(Message msg) {
 		try {
 			System.out.println(msg.getMessage());
 			// on encrypte le message
@@ -149,7 +156,7 @@ public class Client  {
 	/*
 	 * Si le client se deconnecte, on ferme les flux et le socket
 	 */
-	private void disconnect() {
+	void disconnect() {
 		try {
 			if(sInput != null) sInput.close();
 		}
@@ -162,20 +169,17 @@ public class Client  {
 			if(socket != null) socket.close();
 		}
 		catch(Exception ignored) {}
+		try{
+			if(listenThread != null) listenThread.interrupt();
+		}
+		catch(Exception ignored) {}
+	}
 
+	public void setMessageListener(MessageListener listener) {
+		this.messageListener = listener;
 	}
 
 	public static void main(String[] args) throws NoSuchPaddingException, NoSuchAlgorithmException {
-		String serverAddress="";
-		// valeurs par défaut si pas d'arguments
-		String resPing=ping();
-		if(resPing.equals("")){
-			System.out.println("Pour l'instant ya r");
-			//TODO mettre le pop up de rentrer l'ip manuellement
-		}
-		else{
-			serverAddress=resPing;
-		}
 		Scanner scan = new Scanner(System.in);
 
 		System.out.println("Enter the username: ");
@@ -186,7 +190,7 @@ public class Client  {
 		}
 
 		// instanciation du client avec les valeurs par défaut ou celles spécifiées
-		Client client = new Client(serverAddress,DEFAULT_PORT, userName);
+		Client client = new Client(userName);
 		// test de la connexion au serveur, si echec, on quitte avec un return
 		if(!client.start())
 			return ;
@@ -229,28 +233,31 @@ public class Client  {
 	 */
 	class ListenFromServer extends Thread {
 		public void run() {
-			while(true) {
+			while (true) {
 				try {
 					// lecture du message du serveur provenant du socket (sInput)
 					Object recu = sInput.readObject();
-					//Là, je teste si recu est un String (un message normal) ou un Byte[] (la clé)
-					if (recu instanceof String){
-						System.out.println(recu);
-					}
-					else if (recu instanceof Key){
+					// Là, je teste si recu est un String (un message normal) ou un Byte[] (la clé)
+					if (recu instanceof String) {
+						String message = (String) recu;
+						System.out.println(message);
+
+						// Appeler le callback pour informer l'interface graphique
+						if (messageListener != null) {
+							messageListener.onMessageReceived(message);
+						}
+					} else if (recu instanceof Key) {
 						System.out.println(Arrays.toString(((Key) recu).getEncoded()));
-						aes.key= (Key) recu;
+						aes.key = (Key) recu;
 					}
 					// on affiche le message
 					System.out.print("> ");
-				}
-				catch(IOException e) {
+				} catch (IOException e) {
 					// notification
 					String notif = " *** ";
 					display(notif + "Server has closed the connection: " + e + notif);
 					break;
-				}
-				catch(ClassNotFoundException ignored) {
+				} catch (ClassNotFoundException ignored) {
 				}
 			}
 		}
