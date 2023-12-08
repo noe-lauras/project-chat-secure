@@ -65,6 +65,15 @@ public class Server {
 		this.port = port;
 	}
 
+	/*
+	* pong : fonction qui permet de répondre au ping du client
+	* On crée un socket pour recevoir les messages
+	* On crée un socket pour envoyer les réponses
+	* On boucle tant que keepGoing est vrai :
+	* → on crée un tableau de byte pour recevoir le message envoyé par le ping de Client
+	* → on crée un DatagramPacket pour recevoir le message
+	* → on récupère l'adresse du client
+	 */
 	public void pong(){
         int receivePort = 1500; // Port pour recevoir les messages
         int sendPort = 1501; // Port pour envoyer les réponses
@@ -83,8 +92,6 @@ public class Server {
                 udpSocket.receive(receivePacket);
                 InetAddress clientAddress = receivePacket.getAddress();
                 String message = new String(receivePacket.getData(), 0, receivePacket.getLength());
-                //
-
                 if (message.equals("Serveur je te parle")) {
                     DatagramSocket responseSocket = new DatagramSocket();
                     String responseMessage = "Client je te réponds";
@@ -95,12 +102,8 @@ public class Server {
                     DatagramPacket responsePacket = new DatagramPacket(sendData, sendData.length, destinationAddress, sendPort);
                     responseSocket.send(responsePacket);
                     responseSocket.close();
-                    //System.out.println("Message envoyé avec succès !");
                 }
             }
-            //System.out.println("YA PU PERSONNE");
-
-            //On ferme la socket (normalement, c'est déjà geré ailleurs mais par précaution...)
             udpSocket.close();
         } catch (IOException ignored) {
         }

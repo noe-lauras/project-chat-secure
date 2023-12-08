@@ -66,7 +66,12 @@ public class Client  {
             this.serverAddress=resPing;
         }
     }
-    //Fonction qui permet de récupérer directement l'IP du serveur sans la taper en dur
+    /*
+    * ping: fonction qui permet de trouver l'adresse ip du serveur
+    * On envoie un message au serveur et on attend sa réponse
+    * Si on reçoit une réponse, on retourne l'adresse ip du serveur
+    * Sinon on retourne une chaine vide
+     */
     public static String ping(){
         int receivePort = DEFAULT_PORT+1 ; // Port pour recevoir les réponses
         String adresseServeur="";
@@ -91,9 +96,7 @@ public class Client  {
             InetAddress clientAddress = receivePacket.getAddress();
             String message2 = new String(receivePacket.getData(), 0, receivePacket.getLength());
             if(message2.equals("Client je te réponds")){
-                System.out.println(message2);
                 adresseServeur=clientAddress.getHostAddress();
-                System.out.println(adresseServeur);
                 socketReception.close();
             }
         } catch (SocketTimeoutException e) {
