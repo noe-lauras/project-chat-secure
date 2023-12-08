@@ -66,7 +66,7 @@ public class ClientGUI extends JFrame implements MessageListener {
         add(bottomPanel, BorderLayout.SOUTH);
 
 
-        client = new Client(username, serverAdress);
+        client = new Client(username);
 
         if (!client.start()) {
             // si le client n'a pas pu se connecter

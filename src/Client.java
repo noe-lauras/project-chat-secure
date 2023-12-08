@@ -2,7 +2,11 @@ import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.DatagramSocket;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 
@@ -50,12 +54,57 @@ public class Client  {
 	 * On génère la clé publique et privée de Diffie-Hellman : dhKey.generateKeys()
 	 *
 	 */
-	Client(String username,String serverAddress) throws NoSuchPaddingException, NoSuchAlgorithmException {
+	Client(String username) throws NoSuchPaddingException, NoSuchAlgorithmException {
 		this.username = username;
 		this.dhKey = new DHKey();
 		dhKey.generateKeys();
-		this.serverAddress = serverAddress;
-	}
+		//La méthode ping gère l'ip donc on n'a pas besoin de la préciser
+        //Le port est toujours 1500
+        String resPing=ping();
+        if(resPing.equals("")){
+            System.out.println("Le serveur n'a pas pu être ping !");
+            this.serverAddress="localhost";
+            //TODO mettre le pop up pour rentrer l'ip manuellement
+        }
+        else{
+            this.serverAddress=resPing;
+        }
+    }
+
+	public static String ping(){
+        int receivePort = DEFAULT_PORT+1 ; // Port pour recevoir les réponses
+        String adresseServeur="";
+        // Message à envoyer
+        String message = "Serveur je te parle";
+
+        DatagramSocket socketReception;
+        try {
+            socketReception = new DatagramSocket(receivePort);
+            // Défini un timeout de 5 secondes pour sortir si on attend trop
+            socketReception.setSoTimeout(5000);
+            DatagramSocket socketEnvoi = new DatagramSocket();
+            byte[] messageBytes = message.getBytes();
+            InetAddress broadcastAddress = InetAddress.getByName("255.255.255.255");
+            DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, broadcastAddress, DEFAULT_PORT);
+            socketEnvoi.send(packet);
+            socketEnvoi.close();
+            byte[] receiveData = new byte[1024];
+            DatagramPacket receivePacket = new DatagramPacket(receiveData,receiveData.length);
+            socketReception.receive(receivePacket);
+
+            InetAddress clientAddress = receivePacket.getAddress();
+            String message2 = new String(receivePacket.getData(), 0, receivePacket.getLength());
+            if(message2.equals("Client je te réponds")){
+                System.out.println(message2);
+                adresseServeur=clientAddress.getHostAddress();
+                System.out.println(adresseServeur);
+                socketReception.close();
+            }
+        } catch (SocketTimeoutException e) {
+            System.out.println("Erreur: Le délai d'attente pour la réponse est dépassé.");
+        } catch (IOException ignored) {}
+        return adresseServeur;
+    }
 
 	/*
 	 * start: pour démarrer le chat
