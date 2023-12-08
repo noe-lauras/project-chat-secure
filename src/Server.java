@@ -120,6 +120,7 @@ public class Server {
 	 */
 	protected void stop() {
 			keepGoing = false;
+			System.exit(0);
 	}
 
 	/*
