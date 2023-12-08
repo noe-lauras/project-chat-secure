@@ -32,7 +32,10 @@ public class ClientGUI extends JFrame implements MessageListener {
         chatArea = new JTextArea();
         chatArea.setEditable(false);
 
-        JButton sendButton = new JButton("Send");
+        JButton sendButton = new JButton("Envoyer");
+
+        // on définit la taille du bouton
+        sendButton.setPreferredSize(new Dimension(150, 50));
 
         sendButton.addActionListener(e -> {
             // Action à effectuer lorsqu'on clique sur le bouton "Send"
