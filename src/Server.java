@@ -23,10 +23,19 @@ import java.util.*;
 * 	- notif: symboles pour les notifications
 *
 * méthodes:
-*
-*
-*
-*
+* 	- Server: constructeur
+* 	- start: pour démarrer le serveur
+* 	- stop: pour arrêter le serveur
+* 	- display: pour afficher un message dans la console, avec la date
+* 	- broadcast: pour envoyer un message à tous les clients
+* 	- remove: pour supprimer un client de la liste des clients connectés
+* 	- ClientThread: sous classe pour écouter les messages des clients
+	* 	- sendDHKey: pour envoyer la clé DH au client
+	* 	- run: pour démarrer le thread
+	* 	- getUsername: pour récupérer le nom d'utilisateur
+	* 	- close: pour fermer les flux d'entrée et de sortie ainsi que le socket
+	* 	- writeMsg: pour écrire un message dans le flux de sortie du client (sOutput, ObjectOutputStream)
+	*
  */
 public class Server {
 	private int port = 1500;
@@ -36,7 +45,7 @@ public class Server {
 	private final ArrayList<ClientThread> al;
 	private final SimpleDateFormat sdf;
 	ServerSocket serverSocket;
-	private volatile boolean keepGoing=true;
+	private volatile boolean keepGoing = true;
 	private final String notif = " *** ";
 
 	/*
@@ -110,7 +119,7 @@ public class Server {
 	 * On met le boolean keepGoing à false, pour sortir de la boucle while de la méthode start
 	 */
 	protected void stop() {
-		keepGoing = false;
+			keepGoing = false;
 	}
 
 	/*
@@ -216,6 +225,7 @@ public class Server {
 	 * On itère sur la liste des clients connectés, jusqu'à trouver le client concerné
 	 * On le supprime de la liste
 	 * On envoie un message à tous les clients, avec le broadcast, pour les informer que le client s'est déconnecté
+	 * Puis, on check si on a supprimé le dernier client, si oui on arrête le serveur.
 	 */
 	synchronized void remove(int id) {
 		String disconnectedClient = "";
@@ -228,6 +238,12 @@ public class Server {
 			}
 		}
 		broadcast(notif + disconnectedClient + " has left the chat room." + notif, "Server");
+
+		// si on a supprimé le dernier client, on arrête le serveur
+		if (al.size() == 0) {
+			display("No more clients connected, stopping server.");
+			stop();
+		}
 	}
 
 	/*
