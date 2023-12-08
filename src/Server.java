@@ -117,6 +117,11 @@ public class Server {
 	/*
 	 * stop: pour arrêter le serveur
 	 * On met le boolean keepGoing à false, pour sortir de la boucle while de la méthode start
+	 * une fois le keepGoing à false, on va donc poursuivre le code de la méthode start :
+	 * → on ferme le socket du serveur
+	 * → on ferme les flux d'entrée et de sortie de chaque client
+	 * → on ferme le socket de chaque client
+	 * → on arrête le programme
 	 */
 	protected void stop() {
 			keepGoing = false;
