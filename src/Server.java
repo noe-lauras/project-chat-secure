@@ -45,6 +45,7 @@ public class Server {
 	private final ArrayList<ClientThread> al;
 	private final SimpleDateFormat sdf;
 	ServerSocket serverSocket;
+	private DatagramSocket udpSocket;
 	private volatile boolean keepGoing = true;
 	private final String notif = " *** ";
 
@@ -64,6 +65,47 @@ public class Server {
 		this.port = port;
 	}
 
+	public void pong(){
+        int receivePort = 1500; // Port pour recevoir les messages
+        int sendPort = 1501; // Port pour envoyer les réponses
+
+        try {
+            udpSocket = new DatagramSocket(receivePort);
+            //System.out.println("En attente de messages...");
+            while (keepGoing) {
+                //System.out.println("En attente de recevoir un paquet. keepGoing = " + keepGoing);
+                if (udpSocket.isClosed()) {
+                    System.out.println("La socket UDP est fermée.");
+                }
+                //Pour recevoir le message envoyé par le ping de Client
+                byte[] receiveData = new byte[1024];
+                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                udpSocket.receive(receivePacket);
+                InetAddress clientAddress = receivePacket.getAddress();
+                String message = new String(receivePacket.getData(), 0, receivePacket.getLength());
+                //
+
+                if (message.equals("Serveur je te parle")) {
+                    DatagramSocket responseSocket = new DatagramSocket();
+                    String responseMessage = "Client je te réponds";
+                    byte[] sendData = responseMessage.getBytes();
+                    //On récupère l'ip du destinataire pour lui renvoyer un message
+                    InetAddress destinationAddress = InetAddress.getByName(clientAddress.getHostAddress());
+                    //Message que l'on renvoie
+                    DatagramPacket responsePacket = new DatagramPacket(sendData, sendData.length, destinationAddress, sendPort);
+                    responseSocket.send(responsePacket);
+                    responseSocket.close();
+                    //System.out.println("Message envoyé avec succès !");
+                }
+            }
+            //System.out.println("YA PU PERSONNE");
+
+            //On ferme la socket (normalement, c'est déjà geré ailleurs mais par précaution...)
+            udpSocket.close();
+        } catch (IOException ignored) {
+        }
+    }
+
 	/*
 	 * start: pour démarrer le serveur
 	 * On se sert d'un boolean keepGoing pour savoir si le serveur est actif
@@ -79,6 +121,7 @@ public class Server {
 	 */
 	public void start() {
 		keepGoing=true;
+		new Thread(this::pong).start();
 		try
 		{ serverSocket = new ServerSocket(port);
 			while(keepGoing)
@@ -113,6 +156,7 @@ public class Server {
 			display(msg);
 		}
 	}
+
 
 	/*
 	 * stop: pour arrêter le serveur
