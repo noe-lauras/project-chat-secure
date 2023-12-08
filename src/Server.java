@@ -2,14 +2,20 @@ import javax.crypto.NoSuchPaddingException;
 import java.io.*;
 import java.net.*;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 
 public class Server {
-	///Attribut de la classe Server
-	private final AES aes = new AES();
-	private final DHKey dhKey;
+	///Attributs de la classe Server
+
+
+	// dictionnaire de clés publiques des clients, qui associe son int id à sa clé publique
+	private final HashMap<String, PublicKey> publicKeys = new HashMap<>();
+
+	// dhKey pour le serveur
+	private DHKey dhKey;
 
 	// unique id pour chaque client, plus facile pour la déconnexion
 	private int uniqueId;
@@ -35,8 +41,9 @@ public class Server {
 
 	//le constructeur ne reçoit que le port à écouter pour la connection en paramètre
 	public Server() throws NoSuchPaddingException, NoSuchAlgorithmException {
-		//Génération du couple clé publique/privée
-		dhKey=new DHKey();
+
+		dhKey = new DHKey();
+		dhKey.generateKeys();
 		// format pour la date
 		sdf = new SimpleDateFormat("HH:mm:ss");
 		// ArrayList pour la liste des clients connectés
@@ -185,7 +192,14 @@ public class Server {
 			message=String.format((String) msg,user);
 		}
 		else{
-			message=user+": "+aes.decrypt((byte[]) msg);
+			// on va chercher la clé publique du client qui a envoyé le message
+			PublicKey publicKey = publicKeys.get(user);
+			// on met la clé publique dans DHKey
+			this.dhKey.setReceivedPublicKey(publicKey);
+			// on génère la clé secrète commune
+			this.dhKey.generateCommonSecretKey();
+			// on decrypte le message avec DHKey
+			message = user + " : " + dhKey.decrypt((byte[]) msg);
 		}
 		// ajouter l'heure au message
 		String time = sdf.format(new Date());
@@ -245,6 +259,9 @@ public class Server {
 
 	// un thread pour chaque client
 	class ClientThread extends Thread {
+		// Public key du client
+		PublicKey publicKeyClient;
+
 		// le socket du client
 		Socket socket;
 		ObjectInputStream sInput;
@@ -269,21 +286,20 @@ public class Server {
 			{
 				sOutput = new ObjectOutputStream(socket.getOutputStream());
 				sInput  = new ObjectInputStream(socket.getInputStream());
+
 				// on lit le nom d'utilisateur
 				username = (String) sInput.readObject();
+				// on recupère la clé publique du client
+				publicKeyClient = (PublicKey) sInput.readObject();
+				// on l'ajoute au dictionnaire des clés publiques
+				publicKeys.put(username, publicKeyClient);
+				// on a les deux clés publiques, on peut générer la clé secrète commune
+				dhKey.generateCommonSecretKey();
 
-				broadcast(notif + "%s has joined the chat room." + notif,username);
+				broadcast(notif + username+ " has joined the chat room." + notif,"Server");
 
-				// si aes n'est pas instancié, on le fait
-				if (aes.key == null) {
-					try {
-						aes.genereKey();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-				sendAESKey();
 				sendDHKey();
+
 			}
 			catch (IOException e) {
 				display("Exception creating new Input/output Streams: " + e);
@@ -292,15 +308,6 @@ public class Server {
 			catch (ClassNotFoundException ignored) {
 			}
 			date = new Date() + "\n";
-		}
-		private void sendAESKey() {
-			try {
-				System.out.println(Arrays.toString(aes.key.getEncoded()));
-				sOutput.writeObject(aes.key); // Envoie la clé AES au client
-			} catch(IOException e) {
-				display("Error sending AES key to " + username);
-				e.printStackTrace();
-			}
 		}
 		private void sendDHKey() {
 			try {
@@ -311,7 +318,6 @@ public class Server {
 				e.printStackTrace();
 			}
 		}
-
 
 		public String getUsername() {
 			return username;

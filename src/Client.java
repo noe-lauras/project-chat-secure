@@ -22,9 +22,8 @@ public class Client  {
 	private Socket socket;// socket object
 	private String serverAddress="";// Adresse du serveur
 	private final String username;// username
-	//TODO Enlever tout ce qui concerne l'AES
-	private final AES aes; // clé de cryptage AES
-	private final DHKey dhKey;
+	private DHKey dhKey;  // Référence à l'objet DHKey
+	private PublicKey serverPublicKey; // clé publique du serveur
 	/*
 	 * Constructeur appelé par la console
 	 * username: le nom d'utilisateur
@@ -32,8 +31,11 @@ public class Client  {
 
 	Client(String username) throws NoSuchPaddingException, NoSuchAlgorithmException {
 		this.username = username;
-		this.aes=new AES();
-		this.dhKey=new DHKey();
+
+		this.dhKey = new DHKey();
+		// on génère la clé publique et privée
+		dhKey.generateKeys();
+
 		//La méthode ping gère l'ip donc on n'a pas besoin de la préciser
 		//Le port est toujours 1500
 		String resPing=ping();
@@ -115,10 +117,12 @@ public class Client  {
 
 		listenThread = new ListenFromServer();
 		listenThread.start();
-		// Envoi du nom d'utilisateur au serveur en tant que String. Tous les autres messages seront des objets ChatMessage et non des Strings.
+		// Envoi du nom d'utilisateur au serveur en tant que String. Puis on envoie notre clé publique au serveur
 		try
 		{
 			sOutput.writeObject(username);
+			// on envoie notre clé publique au serveur
+			sOutput.writeObject(dhKey.getPublicKey());
 		}
 		catch (IOException eIO) {
 			display("Exception doing login : " + eIO);
@@ -140,9 +144,8 @@ public class Client  {
 	void sendMessage(Message msg) {
 		try {
 			System.out.println(msg.getMessage());
-			// on encrypte le message
-			msg.setMessage((aes.encrypt((String) msg.getMessage())));
-			System.out.println(Arrays.toString((byte[])msg.getMessage()));
+			// on crypte le message
+			msg.setMessage(dhKey.encrypt(msg));
 			sOutput.writeObject(msg);
 		}
 		catch(IOException e) {
@@ -184,9 +187,11 @@ public class Client  {
 						if (messageListener != null) {
 							messageListener.onMessageReceived(message);
 						}
-					} else if (recu instanceof Key) {
-						System.out.println(Arrays.toString(((Key) recu).getEncoded()));
-						aes.key = (Key) recu;
+					} else if (recu instanceof PublicKey) {
+						serverPublicKey = (PublicKey) recu;
+						System.out.println("Clé publique du serveur reçue");
+						dhKey.setReceivedPublicKey(serverPublicKey);
+						dhKey.generateCommonSecretKey();
 					}
 					// on affiche le message
 					System.out.print("> ");
