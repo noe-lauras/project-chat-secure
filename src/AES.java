@@ -2,6 +2,11 @@ import javax.crypto.* ;
 import java.security.* ;
 import java.util.Arrays;
 
+/*
+La classe AES permet de chiffrer et déchiffrer des messages.
+Elle a été initialement définie lorsque nous n'utilisions pas Diffie-Hellman.
+Elle n'est plus utilisée dans la version finale du projet.
+ */
 class AES {
     KeyGenerator kg;
     Key key;

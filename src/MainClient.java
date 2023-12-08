@@ -2,10 +2,14 @@ import javax.crypto.NoSuchPaddingException;
 import javax.swing.*;
 import java.security.NoSuchAlgorithmException;
 
-public class MainClient {
-    public static void main(String[] args) throws NoSuchPaddingException, NoSuchAlgorithmException {
 
-        // fenêtre temporaires pour demander l'username
+/*
+La classe MainClient est la classe principale du client.
+Elle demande le nom d'utilisateur et lance le clientGUI : la fenêtre de chat.
+ */
+public class MainClient {
+    private static final String SERVER_ADDRESS = "localhost";
+    public static void main(String[] args) throws NoSuchPaddingException, NoSuchAlgorithmException {
 
         String userName = JOptionPane.showInputDialog(null, "Enter your username: ", "Username", JOptionPane.PLAIN_MESSAGE);
 
@@ -15,7 +19,7 @@ public class MainClient {
         }
 
         // on crée le clientGUI
-        new ClientGUI(userName);
+        new ClientGUI(userName, SERVER_ADDRESS);
 
     }
 }

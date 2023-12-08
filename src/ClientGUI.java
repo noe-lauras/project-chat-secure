@@ -8,12 +8,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 
+/*
+La classe ClientGUI est la fenêtre de chat.
+Elle implémente l'interface MessageListener pour recevoir les messages du serveur.
+ELle instancie un client pour se connecter au serveur.
+ */
 public class ClientGUI extends JFrame implements MessageListener {
-    private final Client client;
+    private Client client;
     private final JTextField messageField;
     private final JTextArea chatArea;
 
-    public ClientGUI(String username) throws NoSuchPaddingException, NoSuchAlgorithmException {
+    public ClientGUI(String username,String serverAdress) throws NoSuchPaddingException, NoSuchAlgorithmException {
 
         // Initialisation de la fenêtre
         setTitle("Secure Chat Client");
@@ -60,9 +65,8 @@ public class ClientGUI extends JFrame implements MessageListener {
         bottomPanel.add(sendButton, BorderLayout.EAST);
         add(bottomPanel, BorderLayout.SOUTH);
 
-        // création du client
-        client = new Client(username);
 
+        client = new Client(username, serverAdress);
 
         if (!client.start()) {
             // si le client n'a pas pu se connecter

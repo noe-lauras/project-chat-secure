@@ -6,126 +6,93 @@ import java.security.PublicKey;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-
+/*
+* La classe Server est le serveur du chat. Il écoute les connexions des clients et leur envoie les messages.
+* Il a besoin d'un thread pour écouter chaque client en permanence.
+*
+* attributs:
+*
+* 	- port: le port de connexion
+* 	- publicKeys: le dictionnaire des clés publiques des clients
+* 	- dhKey: la clé de Diffie-Hellman
+* 	- uniqueId: l'id unique pour chaque client
+* 	- al: la liste des clients connectés
+* 	- sdf: pour afficher la date
+* 	- serverSocket: le socket du serveur
+* 	- keepGoing: pour savoir si le serveur est actif
+* 	- notif: symboles pour les notifications
+*
+* méthodes:
+*
+*
+*
+*
+ */
 public class Server {
-	///Attributs de la classe Server
-
-
-	// dictionnaire de clés publiques des clients, qui associe son int id à sa clé publique
+	private int port = 1500;
 	private final HashMap<String, PublicKey> publicKeys = new HashMap<>();
-
-	// dhKey pour le serveur
 	private DHKey dhKey;
-
-	// unique id pour chaque client, plus facile pour la déconnexion
 	private int uniqueId;
-	// ArrayList pour la liste des clients connectés
 	private final ArrayList<ClientThread> al;
-	// affichage de l'heure et de la date
 	private final SimpleDateFormat sdf;
-
-	//Pour pouvoir fermer le thread d'écoute depuis la fonction turn_off
-	DatagramSocket udpSocket;
-	//Pour forcer la fermeture du serveur
 	ServerSocket serverSocket;
-	//  port de connection
-	private final int DEFAULT_PORT=1500;
-	// boolean pour savoir si le serveur est actif
-	private volatile boolean estActif=true;
-	//Pour que chaque thread voie la dernière valeur écrite, on met la variable en volatile
-	//Comme en arduino
 	private volatile boolean keepGoing=true;
-	// notification
 	private final String notif = " *** ";
-	///
 
-	//le constructeur ne reçoit que le port à écouter pour la connection en paramètre
-	public Server() throws NoSuchPaddingException, NoSuchAlgorithmException {
-
+	/*
+	 * Constructeur:
+	 * Il prend en paramètre le port de connexion
+	 * On initialise les attributs
+	 * On génère la clé publique et privée de Diffie-Hellman : dhKey.generateKeys()
+	 *
+	 */
+	public Server(int port) throws NoSuchPaddingException, NoSuchAlgorithmException {
 		dhKey = new DHKey();
 		dhKey.generateKeys();
 		// format pour la date
-		sdf = new SimpleDateFormat("HH:mm:ss");
-		// ArrayList pour la liste des clients connectés
+		sdf = new SimpleDateFormat("HH:mm");
 		al = new ArrayList<>();
+		this.port = port;
 	}
-	//Fonction qui attend qu'un client ping
-	public void pong(){
-		int receivePort = 1500; // Port pour recevoir les messages
-		int sendPort = 1501; // Port pour envoyer les réponses
 
-		try {
-			udpSocket = new DatagramSocket(receivePort);
-			//System.out.println("En attente de messages...");
-			while (keepGoing) {
-				//System.out.println("En attente de recevoir un paquet. keepGoing = " + keepGoing);
-				if (udpSocket.isClosed()) {
-					System.out.println("La socket UDP est fermée.");
-				}
-				//Pour recevoir le message envoyé par le ping de Client
-				byte[] receiveData = new byte[1024];
-				DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-				udpSocket.receive(receivePacket);
-				InetAddress clientAddress = receivePacket.getAddress();
-				String message = new String(receivePacket.getData(), 0, receivePacket.getLength());
-				//
-
-				if (message.equals("Serveur je te parle")) {
-					DatagramSocket responseSocket = new DatagramSocket();
-					String responseMessage = "Client je te réponds";
-					byte[] sendData = responseMessage.getBytes();
-					//On récupère l'ip du destinataire pour lui renvoyer un message
-					InetAddress destinationAddress = InetAddress.getByName(clientAddress.getHostAddress());
-					//Message que l'on renvoie
-					DatagramPacket responsePacket = new DatagramPacket(sendData, sendData.length, destinationAddress, sendPort);
-					responseSocket.send(responsePacket);
-					responseSocket.close();
-					//System.out.println("Message envoyé avec succès !");
-				}
-			}
-			//System.out.println("YA PU PERSONNE");
-
-			//On ferme la socket (normalement, c'est déjà geré ailleurs mais par précaution...)
-			udpSocket.close();
-		} catch (IOException ignored) {
-		}
-	}
+	/*
+	 * start: pour démarrer le serveur
+	 * On se sert d'un boolean keepGoing pour savoir si le serveur est actif
+	 * Tant que keepGoing est vrai :
+		 * On crée un socket pour écouter les connexions des clients
+		 * On crée un thread pour chaque client qui se connecte
+		 * On ajoute le thread à la liste des clients connectés
+		 * On démarre le thread
+	 * Quand on sort de la boucle,
+	 * On ferme le socket du serveur
+	 * On ferme les flux d'entrée et de sortie de chaque client
+	 * On ferme le socket de chaque client
+	 */
 	public void start() {
-		// Démarre le thread pour écouter les requêtes UDP
-		new Thread(this::pong).start();
-		//creation du socket serveur et ecoute sur le port
+		keepGoing=true;
 		try
-		{
-			// le socket serveur
-			serverSocket = new ServerSocket(DEFAULT_PORT);
-
-			// boucle infinie pour attendre les connexions des clients
-			//System.out.println("avant boucle: "+estActif);
-			while(estActif)
+		{ serverSocket = new ServerSocket(port);
+			while(keepGoing)
 			{
-				//System.out.println("dans boucle : "+estActif);
-				display("Server waiting for Clients on port " + DEFAULT_PORT + ".");
-				// accepte la connection si le client est connecté
+				display("Server waiting for Clients on port " + port + ".");
 				Socket socket = serverSocket.accept();
-				// creation d'un thread pour le client
+				if(!keepGoing){
+					break;
+				}
 				ClientThread t = new ClientThread(socket);
-				// ajout du client à la liste des clients
 				al.add(t);
-				// on démarre le thread
 				t.start();
 			}
-			//System.out.println("LE SERV N'EST PLUS ACTIF");
-			// si on n'est plus actif on ferme le serveur
 			try {
 				serverSocket.close();
-				for (ClientThread tc : al) {
+				for (int i = 0; i < al.size(); ++i) {
+					ClientThread tc = al.get(i);
 					try {
-						// on ferme les flux de sortie et d'entrée ainsi que le socket de chaque client
 						tc.sInput.close();
 						tc.sOutput.close();
 						tc.socket.close();
-					} catch (IOException ignored) {
 					}
+					catch(IOException ignored) {}
 				}
 			}
 			catch(Exception e) {
@@ -138,94 +105,68 @@ public class Server {
 		}
 	}
 
-	// pour stopper le serveur
-	protected void turn_off() {
-		// on change le boolean pour ne plus être actif
-		//System.out.println("BAH JE SUIS LA NON????");
-		estActif = false;
-		keepGoing= false;
-		try{
-			if (serverSocket != null && !serverSocket.isClosed()) serverSocket.close();
-		}catch(IOException e){e.printStackTrace();}
-		// Ferme la socket, ce qui devrait interrompre socket.receive()
-		if (udpSocket != null && !udpSocket.isClosed()) udpSocket.close();
-		for (ClientThread ct:al) {
-			ct.stopClientThread();
-		}
+	/*
+	 * stop: pour arrêter le serveur
+	 * On met le boolean keepGoing à false, pour sortir de la boucle while de la méthode start
+	 */
+	protected void stop() {
+		keepGoing = false;
 	}
 
-
-	synchronized void remove(int id) {
-		String disconnectedClient = "";
-		Iterator<ClientThread> iterator = al.iterator();
-
-		synchronized (al) {
-			while (iterator.hasNext()) {
-				ClientThread ct = iterator.next();
-				if (ct.id == id) {
-					disconnectedClient = ct.getUsername();
-					iterator.remove(); // Utilisation de l'itérateur pour retirer l'élément en toute sécurité
-					ct.stopClientThread();
-
-					// Fermeture des flux de sortie et d'entrée ainsi que du socket
-					try {
-						if (ct.sOutput != null) ct.sOutput.close();
-						if (ct.sInput != null) ct.sInput.close();
-						if (ct.socket != null && !ct.socket.isClosed()) ct.socket.close();
-					} catch (IOException ignored) {
-					}
-
-					break;
-				}
-			}
-		}
-
-		broadcast(notif + " %s has left the chat room." + notif, disconnectedClient);
-
-		// Vérifie si la liste des clients est vide
-		if (al.isEmpty()) {
-			turn_off(); // On arrête le serveur si aucun client n'est connecté
-		}
-	}
-
-
-
-	// Affichage (display) de n'importe quel event dans la console
+	/*
+	 * display: pour afficher un message dans la console, avec la date
+	 * On utilise le format sdf pour la date : HH:mm
+	 * HH désigne les heures, mm les minutes
+	 */
 	private void display(String msg) {
 		String time = sdf.format(new Date()) + " " + msg;
 		System.out.println(time);
 	}
 
-	// diffuser (broadcast) un message à tous les clients connectés
+	/*
+	 * broadcast: pour envoyer un message à tous les clients
+	 * on la déclare synchronized pour éviter les conflits entre les threads :
+	 *  → un seul thread peut y accéder à la fois
+	 * Si le message est un String ( message non crypté ) :
+	 * → on le formate avec le nom d'utilisateur
+	 * Sinon, c'est un message crypté :
+	 * → on récupère la clé publique du client qui à envoyé le message
+	 * → on la donne à la clé de Diffie-Hellman pour qu'elle puisse générer la clé secrète commune
+	 * → on déchiffre le message avec la clé secrète commune
+	 * On ajoute l'heure au message
+	 *
+	 * Puis, on regarde dans quel cas on est :
+	 * 1) le message est privé :
+	 * → on récupère le nom d'utilisateur du client qui doit recevoir le message
+	 * → on itère sur la liste des clients connectés, pour trouver le client concerné et le client qui envoie le message
+	 * → on essaye d'envoyer le message au client, si ça ne marche pas on le supprime de la liste
+	 *
+	 * 2) le message n'est pas privé :
+	 * → on itère sur la liste des clients connectés, pour envoyer le message à chacun
+	 * → on essaye d'envoyer le message au client, si ça ne marche pas on le supprime de la liste, ça veut dire qu'il n'est plus connecté
+	 *
+	 * On retourne true si le message a été envoyé, false sinon
+	 */
 	private synchronized boolean broadcast(Object msg,String user) {
 		String message;
 		if (msg instanceof String){
 			message=String.format((String) msg,user);
 		}
 		else{
-			// on va chercher la clé publique du client qui a envoyé le message
 			PublicKey publicKey = publicKeys.get(user);
-			// on met la clé publique dans DHKey
 			this.dhKey.setReceivedPublicKey(publicKey);
-			// on génère la clé secrète commune
 			this.dhKey.generateCommonSecretKey();
-			// on decrypte le message avec DHKey
 			message = user + " : " + dhKey.decrypt((byte[]) msg);
 		}
-		// ajouter l'heure au message
 		String time = sdf.format(new Date());
-
-		// on check si le message est un message privé
+		// check si le message est privé
 		String[] w = message.split(" ",3);
-
 		boolean isPrivate = w[1].charAt(0) == '@';
-
 
 		// le message est privé, on l'envoie au client concerné
 		if(isPrivate)
 		{
 			String tocheck=w[1].substring(1);
-
 			message=w[0]+w[2];
 			String messageLf = time + " " + message + "\n";
 			boolean found=false;
@@ -252,7 +193,6 @@ public class Server {
 		else
 		{
 			String messageLf = time + " " + message + "\n";
-			// on affiche le message dans la console
 			System.out.print(messageLf);
 			// on itère sur la liste des clients connectés, pour envoyer le message à chacun
 			for(int i = al.size(); --i >= 0;) {
@@ -268,47 +208,81 @@ public class Server {
 		return true;
 	}
 
-	// un thread pour chaque client
-	class ClientThread extends Thread {
-		// Public key du client
-		PublicKey publicKeyClient;
+	/*
+	 * remove: pour supprimer un client de la liste des clients connectés
+	 * on la déclare synchronized pour éviter les conflits entre les threads :
+	 *  → un seul thread peut y accéder à la fois
+	 * On récupère le nom d'utilisateur du client déconnecté
+	 * On itère sur la liste des clients connectés, jusqu'à trouver le client concerné
+	 * On le supprime de la liste
+	 * On envoie un message à tous les clients, avec le broadcast, pour les informer que le client s'est déconnecté
+	 */
+	synchronized void remove(int id) {
+		String disconnectedClient = "";
+		for(int i = 0; i < al.size(); ++i) {
+			ClientThread ct = al.get(i);
+			if(ct.id == id) {
+				disconnectedClient = ct.getUsername();
+				al.remove(i);
+				break;
+			}
+		}
+		broadcast(notif + disconnectedClient + " has left the chat room." + notif, "Server");
+	}
 
-		// le socket du client
+	/*
+	* ClientThread: sous classe pour écouter les messages des clients
+	* attributs:
+	* 	- sInput: pour lire les messages du client
+	* 	- sOutput: pour écrire sur le socket
+	* 	- socket: le socket pour se connecter au client
+	* 	- id: l'id du client
+	* 	- username: le nom d'utilisateur
+	* 	- cm: le message du client
+	* 	- date: la date du message
+	* méthodes:
+	* 	- ClientThread: constructeur
+	* 	- run: pour démarrer le thread
+	* 	- getUsername: pour récupérer le nom d'utilisateur
+	* 	- close: pour fermer les flux d'entrée et de sortie ainsi que le socket
+	* 	- writeMsg: pour écrire un message dans le flux de sortie du client (sOutput, ObjectOutputStream)
+	* 	- sendDHKey: pour envoyer la clé DH au client
+	*
+	 */
+	class ClientThread extends Thread {
+		PublicKey publicKeyClient;
 		Socket socket;
 		ObjectInputStream sInput;
 		ObjectOutputStream sOutput;
-		// son unique id
 		int id;
-		// le nom d'utilisateur
 		String username;
-		// le message est un objet pour pouvoir envoyer le type du message (MESSAGE, USERS, bye)
 		Message cm;
-		// la date
 		String date;
 
-		// Constructeur
+		/*
+		 * Constructeur:
+		 * Il prend en paramètre le socket du client
+		 * On initialise les attributs
+		 * On lit le nom d'utilisateur puis la clé publique du client
+		 * Une fois la clé publique récupérée, on l'ajoute au dictionnaire des clés publiques.
+		 * On envoie la clé publique du serveur au client, pour qu'il puisse générer la clé secrète commune par la suite
+		 * On envoie un message à tous les clients, avec le broadcast, pour les informer qu'un nouveau client s'est connecté
+		 */
 		ClientThread(Socket socket) throws IOException {
 			// unique id, on l'incrémente à chaque nouveau client connecté
 			id = ++uniqueId;
 			this.socket = socket;
-			// on essaye de créer les flux d'entrée et de sortie, si ça ne marche pas on affiche une erreur
-			System.out.println("Thread trying to create Object Input/Output Streams");
 			try
 			{
 				sOutput = new ObjectOutputStream(socket.getOutputStream());
 				sInput  = new ObjectInputStream(socket.getInputStream());
-
 				// on lit le nom d'utilisateur
 				username = (String) sInput.readObject();
 				// on recupère la clé publique du client
 				publicKeyClient = (PublicKey) sInput.readObject();
 				// on l'ajoute au dictionnaire des clés publiques
 				publicKeys.put(username, publicKeyClient);
-				// on a les deux clés publiques, on peut générer la clé secrète commune
-				dhKey.generateCommonSecretKey();
-
 				broadcast(notif + username+ " has joined the chat room." + notif,"Server");
-
 				sendDHKey();
 
 			}
@@ -320,9 +294,14 @@ public class Server {
 			}
 			date = new Date() + "\n";
 		}
+
+		/*
+		 * sendDHKey: pour envoyer la clé DH au client
+		 * On récupère la clé publique du serveur
+		 * On écrit la clé DH dans le flux de sortie du client
+		 */
 		private void sendDHKey() {
 			try {
-				System.out.println(Arrays.toString(dhKey.getPublicKey().getEncoded()));
 				sOutput.writeObject(dhKey.getPublicKey()); // Envoie la clé DH au client
 			} catch(IOException e) {
 				display("Error sending DH key to " + username);
@@ -330,14 +309,30 @@ public class Server {
 			}
 		}
 
+		/*
+		 * getUsername: pour récupérer le nom d'utilisateur
+		 */
+
 		public String getUsername() {
 			return username;
 		}
 
-		// boucle infinie pour écouter les messages des clients
+		/*
+		 * run: pour démarrer le thread
+		* On boucle jusqu'à ce que le client se déconnecte, (avec un bye)
+		* On lit le message envoyé par le client, on cast en Message car c'est un objet
+		* On récupère le message de l'objet Message
+		* On check le type du message, pour traiter les cas : USERS, MESSAGE, bye
+		* 1. MESSAGE pour un message normal
+		* → on envoie le message à tous les clients avec le broadcast
+		* 2. bye pour se déconnecter
+		* → on affiche un message de déconnexion, on a déjà traité le cas dans la méthode remove
+		* 3. USERS pour la liste des utilisateurs connectés
+		* → on envoie la liste des utilisateurs connectés au client
+		* Quand on sort de la boucle, on déconnecte le client de la liste des clients connectés
+		* */
 		public void run() {
-			// boucler jusqu'à ce que le client se déconnecte, (avec un bye)
-			keepGoing = true;
+			boolean keepGoing = true;
 			while(keepGoing) {
 				// lire le message envoyé par le client, on cast en Message car c'est un objet
 				try {
@@ -348,7 +343,7 @@ public class Server {
 					break;
 				}
 				catch(ClassNotFoundException e2) {
-					e2.printStackTrace();
+					break;
 				}
 				// on récupère le message de l'objet Message
 				Object message = cm.getMessage();
@@ -380,34 +375,38 @@ public class Server {
 			}
 			// si on sort de la boucle, on déconnecte le client de la liste des clients connectés
 			remove(id);
-			shut();
+			close();
 		}
 
-		private void shut() {
-			System.out.println("on ferme boutique");
+		/*
+		 * close: pour fermer les flux d'entrée et de sortie ainsi que le socket
+		 */
+		private void close() {
 			try {
-				if (sOutput != null) sOutput.close();
-				if (sInput != null) sInput.close();
-				if (socket != null) {
-					System.out.println("normalement on arrive jusque là");
-					socket.close();
-				}
-			}catch (Exception ignored) {}
+				if(sOutput != null) sOutput.close();
+			}
+			catch(Exception e) {}
+			try {
+				if(sInput != null) sInput.close();
+			}
+			catch(Exception e) {};
+			try {
+				if(socket != null) socket.close();
+			}
+			catch (Exception e) {}
 		}
 
-		public void stopClientThread() {
-			keepGoing = false;
-			shut();
-		}
-
-		// écrire un message dans le flux de sortie du client (sOutput, ObjectOutputStream)
+		/*
+		 * writeMsg: pour écrire un message dans le flux de sortie du client (sOutput, ObjectOutputStream)
+		 * on la déclare boolean pour savoir si le message a été envoyé ou non
+		 * on check si le socket est connecté, si non on ferme le flux de sortie
+		 * Si le socket est connecté, on écrit simplement le message dans le flux de sortie sOutput avec la méthode writeObject
+		 */
 		private boolean writeMsg(String msg) {
-			// on check si le socket est connecté, si non on ferme le flux de sortie
 			if(!socket.isConnected()) {
-				shut();
+				close();
 				return false;
 			}
-			// on écrit le message dans le flux de sortie
 			try {
 				sOutput.writeObject(msg);
 			}

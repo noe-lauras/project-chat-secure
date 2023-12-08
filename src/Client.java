@@ -2,149 +2,115 @@ import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.*;
-import java.security.Key;
+import java.net.Socket;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.Arrays;
-import java.util.Random;
-import java.util.Scanner;
 
 
-// La classe Client qui peut être exécutée en mode console
+/*
+La classe Client est le client du chat. Il se connecte au serveur et envoie des messages.
+Il a besoin d'un thread pour écouter le serveur en permanence.
+attributs:
+	- sInput: pour lire les messages du serveur
+	- sOutput: pour écrire sur le socket
+	- socket: le socket pour se connecter au serveur
+	- server: le serveur auquel on se connecte
+	- username: le nom d'utilisateur
+	- port: le port de connexion
+	- messageListener: le callback pour informer l'interface graphique
+	- listenThread: le thread pour écouter le serveur
+	- dhKey: la clé de Diffie-Hellman
+	- serverPublicKey: la clé publique du serveur
+méthodes:
+	- Client: constructeur
+	- start: pour démarrer le chat
+	- display: pour afficher un message dans la console
+	- sendMessage: pour envoyer un message au serveur
+	- disconnect: pour se déconnecter du serveur
+	- setMessageListener: pour définir le callback
+	- ListenFromServer: sous classe pour écouter le serveur
+
+ */
 public class Client  {
-	private  ListenFromServer listenThread; // pour ecouter le serveur
-	private MessageListener messageListener; // pour afficher les messages
+	private  ListenFromServer listenThread;
+	private MessageListener messageListener;
 	private static final int DEFAULT_PORT = 1500;
-	private ObjectInputStream sInput;// pour lire le socket
-	private ObjectOutputStream sOutput;// pour écrire sur le socket
-	private Socket socket;// socket object
-	private String serverAddress="";// Adresse du serveur
-	private final String username;// username
-	private DHKey dhKey;  // Référence à l'objet DHKey
-	private PublicKey serverPublicKey; // clé publique du serveur
+	private ObjectInputStream sInput;
+	private ObjectOutputStream sOutput;
+	private Socket socket;
+	private String serverAddress="";
+	private final String username;
+	private DHKey dhKey;
+	private PublicKey serverPublicKey;
+
 	/*
-	 * Constructeur appelé par la console
-	 * username: le nom d'utilisateur
+	 * Constructeur:
+	 * Il prend en paramètre le nom d'utilisateur et l'adresse du serveur
+	 * On initialise les attributs
+	 * On génère la clé publique et privée de Diffie-Hellman : dhKey.generateKeys()
+	 *
 	 */
-
-	Client(String username) throws NoSuchPaddingException, NoSuchAlgorithmException {
+	Client(String username,String serverAddress) throws NoSuchPaddingException, NoSuchAlgorithmException {
 		this.username = username;
-
 		this.dhKey = new DHKey();
-		// on génère la clé publique et privée
 		dhKey.generateKeys();
-
-		//La méthode ping gère l'ip donc on n'a pas besoin de la préciser
-		//Le port est toujours 1500
-		String resPing=ping();
-		if(resPing.equals("")){
-			System.out.println("Pour l'instant ya r");
-			//TODO mettre le pop up pour rentrer l'ip manuellement
-		}
-		else{
-			this.serverAddress=resPing;
-		}
-	}
-	//Fonction qui permet de récupérer directement l'IP du serveur sans la taper en dur
-	public static String ping(){
-		int receivePort = DEFAULT_PORT+1 ; // Port pour recevoir les réponses
-		String adresseServeur="";
-		// Message à envoyer
-		String message = "Serveur je te parle";
-
-		DatagramSocket socketReception;
-		try {
-			socketReception = new DatagramSocket(receivePort);
-			// Défini un timeout de 5 secondes pour sortir si on attend trop
-			socketReception.setSoTimeout(5000);
-			DatagramSocket socketEnvoi = new DatagramSocket();
-			byte[] messageBytes = message.getBytes();
-			InetAddress broadcastAddress = InetAddress.getByName("255.255.255.255");
-			DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length, broadcastAddress, DEFAULT_PORT);
-			socketEnvoi.send(packet);
-			socketEnvoi.close();
-			byte[] receiveData = new byte[1024];
-			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-			socketReception.receive(receivePacket);
-
-			InetAddress clientAddress = receivePacket.getAddress();
-			String message2 = new String(receivePacket.getData(), 0, receivePacket.getLength());
-			if(message2.equals("Client je te réponds")){
-				System.out.println(message2);
-				adresseServeur=clientAddress.getHostAddress();
-				System.out.println(adresseServeur);
-				socketReception.close();
-			}
-		} catch (SocketTimeoutException e) {
-			System.out.println("Erreur: Le délai d'attente pour la réponse est dépassé.");
-		} catch (IOException ignored) {}
-		return adresseServeur;
+		this.serverAddress = serverAddress;
 	}
 
-	//Pour démarrer le chat
+	/*
+	 * start: pour démarrer le chat
+	 * on tente d'instancier un socket avec l'adresse du serveur et le port par défaut
+	 * si ça échoue, on affiche une erreur et on retourne false -> le main sait que la connexion a échoué
+	 * sinon, on affiche un message de connexion réussie
+	 * on crée les flux d'entrée et de sortie :
+	 * 		- sInput pour lire les messages du serveur
+	 * 		- sOutput pour écrire sur le socket
+	 * on crée le thread pour écouter le serveur : listenThread = new ListenFromServer();
+	 * on démarre le thread : listenThread.start();
+	 * on envoie le nom d'utilisateur au serveur en tant que String. Puis on envoie notre clé publique au serveur
+	 * 		- sOutput.writeObject(username);
+	 * 		- sOutput.writeObject(dhKey.getPublicKey());
+	 * si ça échoue, on affiche une erreur et on retourne false -> le main sait que l'envoi a échoué
+	 * sinon, on retourne true -> le main sait que la connexion a réussi
+	 */
 	public boolean start() {
-		// essaie de se connecter au serveur
-		try {
-			socket = new Socket(serverAddress,DEFAULT_PORT);
-		}
-		// exception si echec
-		catch(Exception ec) {
-			display("Error connectiong to server:" + ec);
-			return false;
-		}
-		//Sinon celle-ci est acceptée
+
+		try { socket = new Socket(serverAddress,DEFAULT_PORT);}
+		catch(Exception ec) { display("Error connectiong to server:" + ec);
+			return false; }
 		String msg = "Connection accepted " + socket.getInetAddress() + ":" + socket.getPort();
 		display(msg);
-
-		/*
-		 * Creation des flux d'entrée et de sortie
-		 */
-
-		try
-		{
-			sInput  = new ObjectInputStream(socket.getInputStream());
-			sOutput = new ObjectOutputStream(socket.getOutputStream());
-
-		}
-		catch (IOException eIO) {
-			display("Exception creating new Input/output Streams: " + eIO);
-			return false;
-		}
-
-		// création du thread pour écouter le serveur, on le stocke pour pouvoir l'arrêter plus tard
-
+		try { sInput  = new ObjectInputStream(socket.getInputStream());
+			sOutput = new ObjectOutputStream(socket.getOutputStream());}
+		catch (IOException eIO) { display("Exception creating new Input/output Streams: " + eIO);
+			return false;}
 		listenThread = new ListenFromServer();
 		listenThread.start();
-		// Envoi du nom d'utilisateur au serveur en tant que String. Puis on envoie notre clé publique au serveur
 		try
-		{
-			sOutput.writeObject(username);
-			// on envoie notre clé publique au serveur
+		{   sOutput.writeObject(username);
 			sOutput.writeObject(dhKey.getPublicKey());
 		}
-		catch (IOException eIO) {
-			display("Exception doing login : " + eIO);
+		catch (IOException eIO) { display("Exception doing login : " + eIO);
 			disconnect();
-			return false;
-		}
-		// tout est ok, on retourne true, pour informer le main que la connexion est ok
+			return false; }
 		return true;
 	}
 
-	// afficher un message dans la console
+	/*
+	 * Pour afficher un message dans la console, avec un retour à la ligne
+	 */
 	private void display(String msg) {
 		System.out.println(msg);
 	}
 
 	/*
-	 * Pour envoyer un message au serveur
+	 * sendMessage: pour envoyer un message au serveur
+	 * on crypte le message avec la méthode encrypt de la classe DHKey
+	 * on envoie le message crypté au serveur
+	 * si ça échoue, on affiche une erreur
 	 */
 	void sendMessage(Message msg) {
 		try {
-			System.out.println(msg.getMessage());
-			// on crypte le message
 			msg.setMessage(dhKey.encrypt(msg));
 			sOutput.writeObject(msg);
 		}
@@ -154,7 +120,10 @@ public class Client  {
 	}
 
 	/*
-	 * Si le client se deconnecte, on ferme les flux et le socket
+	 * disconnect: pour se déconnecter du serveur
+	 * on ferme les flux d'entrée et de sortie, et le socket
+	 * on interrompt le thread pour écouter le serveur
+	 * on ignore les erreurs car on ne peut rien faire si ça échoue
 	 */
 	void disconnect() {
 		try {
@@ -166,34 +135,39 @@ public class Client  {
 		catch(Exception ignored) {}
 	}
 
+	/*
+	 * setMessageListener: pour définir le callback
+	 * le callback est une interface MessageListener qui a une méthode onMessageReceived
+	 * on définit le callback avec la méthode setMessageListener, comme ça, on peut appeler la méthode onMessageReceived
+	 */
 	public void setMessageListener(MessageListener listener) {
 		this.messageListener = listener;
 	}
 
 	/*
-	 * sous classe pour ecouter le serveur, en tant que thread, pour ne pas bloquer le client avec la lecture du socket
+	 * ListenFromServer: sous classe pour écouter le serveur
+	 * on écoute en permanence le serveur (tant que le thread n'est pas interrompu)
+	 * si on reçoit un message :
+	 * 		- si c'est un String : on appelle simplement la méthode onMessageReceived du callback, qui va actualiser l'interface graphique
+	 * 		- si c'est une clé publique : c'est la clé publique du serveur, on la stocke dans la DhKey du client pour pouvoir crypter les messages
+	 * si on reçoit une erreur, on affiche un message d'erreur et on arrête le thread
+	 *
 	 */
 	class ListenFromServer extends Thread {
 		public void run() {
 			while (true) {
 				try {
-					// lecture du message du serveur provenant du socket (sInput)
 					Object recu = sInput.readObject();
-					// Là, je teste si recu est un String (un message normal) ou un Byte[] (la clé)
 					if (recu instanceof String message) {
 						System.out.println(message);
-
-						// Appeler le callback pour informer l'interface graphique
 						if (messageListener != null) {
 							messageListener.onMessageReceived(message);
 						}
 					} else if (recu instanceof PublicKey) {
 						serverPublicKey = (PublicKey) recu;
-						System.out.println("Clé publique du serveur reçue");
 						dhKey.setReceivedPublicKey(serverPublicKey);
 						dhKey.generateCommonSecretKey();
 					}
-					// on affiche le message
 					System.out.print("> ");
 				} catch (IOException e) {
 					// notification
