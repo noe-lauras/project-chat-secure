@@ -155,29 +155,40 @@ public class Server {
 	}
 
 
-	// pour supprimer un client de la liste des clients connectés (s'il se déconnecte avec un bye)
 	synchronized void remove(int id) {
-		//System.out.println("JE ME DECONNECTE");
 		String disconnectedClient = "";
-		// on itère sur la liste des clients connectés, pour trouver le client concerné
-		for(int i = 0; i < al.size(); ++i) {
-			ClientThread ct = al.get(i);
-			// si on le trouve, on le supprime de la liste
-			if(ct.id == id) {
-				disconnectedClient = ct.getUsername();
-				al.remove(i);
-				ct.stopClientThread();
-				break;
+		Iterator<ClientThread> iterator = al.iterator();
+
+		synchronized (al) {
+			while (iterator.hasNext()) {
+				ClientThread ct = iterator.next();
+				if (ct.id == id) {
+					disconnectedClient = ct.getUsername();
+					iterator.remove(); // Utilisation de l'itérateur pour retirer l'élément en toute sécurité
+					ct.stopClientThread();
+
+					// Fermeture des flux de sortie et d'entrée ainsi que du socket
+					try {
+						if (ct.sOutput != null) ct.sOutput.close();
+						if (ct.sInput != null) ct.sInput.close();
+						if (ct.socket != null && !ct.socket.isClosed()) ct.socket.close();
+					} catch (IOException ignored) {
+					}
+
+					break;
+				}
 			}
 		}
-		broadcast(notif + " %s has left the chat room." + notif,disconnectedClient);
+
+		broadcast(notif + " %s has left the chat room." + notif, disconnectedClient);
+
 		// Vérifie si la liste des clients est vide
-		//System.out.println("Avant la boucle qui teste vide ou pas");
 		if (al.isEmpty()) {
-			//System.out.println("C'est vide donc je stoppe");
 			turn_off(); // On arrête le serveur si aucun client n'est connecté
 		}
 	}
+
+
 
 	// Affichage (display) de n'importe quel event dans la console
 	private void display(String msg) {
@@ -341,9 +352,6 @@ public class Server {
 				}
 				// on récupère le message de l'objet Message
 				Object message = cm.getMessage();
-//				if (message instanceof byte[]){
-//					System.out.println("MES COUILLES A SKI");
-//				}
 				// on check le type du message, pour traiter les cas : USERS, MESSAGE, bye
 				switch (cm.getType()) {
 					// MESSAGE pour un message normal
