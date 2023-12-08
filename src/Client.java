@@ -1,4 +1,5 @@
 import javax.crypto.NoSuchPaddingException;
+import javax.swing.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -38,7 +39,7 @@ public class Client  {
 	private ObjectInputStream sInput;
 	private ObjectOutputStream sOutput;
 	private Socket socket;
-	private final String serverAddress;
+	private String serverAddress;
 	private final String username;
 	private DHKey dhKey;
 	private PublicKey serverPublicKey;
@@ -57,10 +58,19 @@ public class Client  {
 		 //La méthode ping gère l'ip donc on n'a pas besoin de la préciser
         //Le port est toujours 1500
         String resPing=ping();
+		//On teste si ping renvoie quelque chose
         if(resPing.equals("")){
-            System.out.println("Pour l'instant ya r");
-            this.serverAddress="localhost";
-            //TODO mettre le pop up pour rentrer l'ip manuellement
+			//Si ce n'est pas le cas, on ouvre une fenêtre qui demande à l'utilisateur de rentrer une IP valide
+            javax.swing.SwingUtilities.invokeLater(() -> {
+				serverAddress = JOptionPane.showInputDialog(null,
+					"Entrez une adresse IP valide:",
+					"Erreur, adresse IP introuvable",
+					JOptionPane.WARNING_MESSAGE);
+				if (serverAddress == null || serverAddress.trim().isEmpty()) {
+					System.out.println("Vous n'avez pas entré d'adresses, fermeture de l'application");
+					System.exit(0);
+				}
+			});
         }
         else{
             this.serverAddress=resPing;

@@ -40,7 +40,7 @@ import java.util.*;
 public class Server {
 	private int port = 1500;
 	private final HashMap<String, PublicKey> publicKeys = new HashMap<>();
-	private DHKey dhKey;
+	private final DHKey dhKey;
 	private int uniqueId;
 	private final ArrayList<ClientThread> al;
 	private final SimpleDateFormat sdf;
@@ -75,8 +75,8 @@ public class Server {
 	* → on récupère l'adresse du client
 	 */
 	public void pong(){
-        int receivePort = 1500; // Port pour recevoir les messages
-        int sendPort = 1501; // Port pour envoyer les réponses
+        int receivePort = port; // Port pour recevoir les messages
+        int sendPort = port+1; // Port pour envoyer les réponses
 
         try {
             udpSocket = new DatagramSocket(receivePort);
@@ -140,14 +140,13 @@ public class Server {
 			}
 			try {
 				serverSocket.close();
-				for (int i = 0; i < al.size(); ++i) {
-					ClientThread tc = al.get(i);
+				for (ClientThread tc : al) {
 					try {
 						tc.sInput.close();
 						tc.sOutput.close();
 						tc.socket.close();
+					} catch (IOException ignored) {
 					}
-					catch(IOException ignored) {}
 				}
 			}
 			catch(Exception e) {
@@ -451,18 +450,20 @@ public class Server {
 		 * close: pour fermer les flux d'entrée et de sortie ainsi que le socket
 		 */
 		private void close() {
+			System.out.println("on ferme boutique");
 			try {
-				if(sOutput != null) sOutput.close();
-			}
-			catch(Exception e) {}
-			try {
-				if(sInput != null) sInput.close();
-			}
-			catch(Exception e) {};
-			try {
-				if(socket != null) socket.close();
-			}
-			catch (Exception e) {}
+				if (sOutput != null) sOutput.close();
+				if (sInput != null) sInput.close();
+				if (socket != null) {
+					System.out.println("normalement on arrive jusque là");
+					socket.close();
+				}
+			}catch (Exception ignored) {}
+		}
+
+		public void stopClientThread() {
+		keepGoing = false;
+		close();
 		}
 
 		/*

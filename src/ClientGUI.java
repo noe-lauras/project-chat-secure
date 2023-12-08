@@ -18,7 +18,7 @@ public class ClientGUI extends JFrame implements MessageListener {
     private final JTextField messageField;
     private final JTextArea chatArea;
 
-    public ClientGUI(String username,String serverAdress) throws NoSuchPaddingException, NoSuchAlgorithmException {
+    public ClientGUI(String username) throws NoSuchPaddingException, NoSuchAlgorithmException {
 
         // Initialisation de la fenêtre
         setTitle("Secure Chat Client");
