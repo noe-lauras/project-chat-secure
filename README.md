@@ -38,10 +38,6 @@ Il s'agit d'une application de chat client-serveur simple implémentée en Java 
 - **Message.java :** Classe Message pour la communication. Contient les informations nécessaires pour les échanges entre le client et le serveur.
 - **MessageListener.java :** Interface pour les rappels de messages. Utilisée pour mettre à jour l'interface utilisateur avec les nouveaux messages reçus.
 
-## Contribuer
-
-N'hésitez pas à contribuer au projet en ouvrant des problèmes ou en soumettant des demandes d'extraction. Les contributions sont les bienvenues !
-
 ## Contexte du Projet
 
 Ce projet a été développé dans le cadre d'un sujet proposé par M. Pouit, enseignant à l'INU Champollion. L'objectif principal était de concevoir un système de chat sécurisé utilisant un protocole de notre choix pour l'échange sécurisé de messages entre un client et un serveur. En mettant en œuvre ces concepts de cryptographie, le projet vise à fournir une expérience de communication confidentielle et authentifiée dans un environnement de chat en ligne. Cette initiative s'inscrit dans le cadre de l'apprentissage des technologies réseau, de la sécurité informatique et de la programmation orientée objet.
